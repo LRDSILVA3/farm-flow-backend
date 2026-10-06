@@ -2,14 +2,9 @@ import { getCustomRepository } from 'typeorm';
 import { ClientRepository } from '../typeorm/repositories/ClientRepository';
 import Client from '../typeorm/entities/Client';
 
-class ListClientService {
+export default class ListClientService {
   public async execute(): Promise<Client[]> {
     const clientsRepository = getCustomRepository(ClientRepository);
-
-    const clients = clientsRepository.find();
-
-    return clients;
+    return clientsRepository.find({ order: { name: 'ASC' } });
   }
 }
-
-export default ListClientService;

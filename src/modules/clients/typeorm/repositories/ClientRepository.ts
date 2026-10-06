@@ -4,11 +4,10 @@ import Client from '../entities/Client';
 @EntityRepository(Client)
 export class ClientRepository extends Repository<Client> {
   public async findByName(name: string): Promise<Client | undefined> {
-    const client = this.findOne({
-      where: {
-        name,
-      },
-    });
-    return client;
+    return this.findOne({ where: { name } });
+  }
+
+  public async findByCpf(cpf: string): Promise<Client | undefined> {
+    return this.findOne({ where: { cpf } });
   }
 }

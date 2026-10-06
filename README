@@ -1,0 +1,6 @@
+To run postgres
+docker stop postgres
+docker rm postgres
+docker run --name postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres:latest
+
+npm run dev

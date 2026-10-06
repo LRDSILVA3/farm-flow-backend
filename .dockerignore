@@ -1,0 +1,13 @@
+﻿node_modules
+.npm
+build
+dist
+coverage
+.git
+.agents
+.playwright-mcp
+*.png
+dump.rdb
+.env
+.env.*
+!.env.example

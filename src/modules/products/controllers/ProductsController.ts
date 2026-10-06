@@ -45,7 +45,7 @@ export default class ProductsController {
 
     const updateProduct = new UpdateProductService();
 
-    const product = updateProduct.execute({
+    const product = await updateProduct.execute({
       id,
       name,
       price,
