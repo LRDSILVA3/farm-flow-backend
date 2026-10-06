@@ -15,7 +15,8 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=postgres
       - DB_NAME=farmflow
-      - RUN_SEED=false
+      - RUN_SEED=true
+      - TS_NODE_TRANSPILE_ONLY=true
     depends_on:
       - postgres
     restart: unless-stopped

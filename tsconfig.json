@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
 
@@ -103,5 +103,5 @@
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build", "src/**/*.spec.ts"]
+  "exclude": ["node_modules", "build", "src/**/*.spec.ts", "ormconfig.js"]
 }
