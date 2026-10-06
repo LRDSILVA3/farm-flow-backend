@@ -76,7 +76,6 @@ const initialServices = [
   { name: 'Amostragem de Solo (AP)', status: 'Ativo', is_fixed: true, value_per_alqueire: '295.00' },
   { name: 'Pulverização Drone', status: 'Ativo', is_fixed: true, value_per_alqueire: '240.00' },
   { name: 'Equalização de Serviços', status: 'Ativo', is_fixed: true, value_per_alqueire: '0.00' },
-  { name: 'Condutividade Elétrica', status: 'Ativo', is_fixed: true, value_per_alqueire: '35.00' },
 ];
 
 async function seed() {
