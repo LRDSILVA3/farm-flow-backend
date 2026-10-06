@@ -30,7 +30,7 @@ export class CreateTableCostVariables1750638000000 implements MigrationInterface
           {
             name: 'value',
             type: 'decimal',
-            precision: 12,
+            precision: 16,
             scale: 6,
           },
           {
