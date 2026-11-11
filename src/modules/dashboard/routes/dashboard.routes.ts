@@ -1,12 +1,14 @@
 import { Router, Request, Response } from 'express';
 import { getRepository } from 'typeorm';
+import ensureAuthenticated from '@shared/http/middlewares/ensureAuthenticated';
+import { ensurePermission } from '@shared/http/middlewares/ensurePermission';
 import Client from '@modules/clients/typeorm/entities/Client';
 import Farm from '@modules/farms/typeorm/entities/Farm';
 import Order from '@modules/orders/typeorm/entities/Order';
 
 const dashboardRouter = Router();
 
-dashboardRouter.get('/summary', async (req: Request, res: Response) => {
+dashboardRouter.get('/summary', ensureAuthenticated, ensurePermission('dashboard'), async (req: Request, res: Response) => {
   const clientRepo = getRepository(Client);
   const farmRepo = getRepository(Farm);
   const orderRepo = getRepository(Order);

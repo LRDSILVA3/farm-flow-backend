@@ -1,8 +1,12 @@
 import { Router } from 'express';
+import ensureAuthenticated from '@shared/http/middlewares/ensureAuthenticated';
+import { ensurePermission } from '@shared/http/middlewares/ensurePermission';
 import BudgetController from '../controllers/BudgetController';
 
 const budgetRouter = Router();
 const controller = new BudgetController();
+
+budgetRouter.use(ensureAuthenticated, ensurePermission('orders', 'settings'));
 
 budgetRouter.post('/calculate/conferencia', controller.calculateConferencia);
 budgetRouter.post('/calculate/foliar', controller.calculateFoliar);

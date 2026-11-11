@@ -143,10 +143,11 @@ export class SoilSamplingService {
     if (desejaEnxofre) valorUnitarioAnalise += VALOR_ANALISE_ENXOFRE;
     if (desejaMicronutrientes) valorUnitarioAnalise += VALOR_ANALISE_MICRONUTRIENTES;
 
-    // 20-40cm analyses
-    const numAnalises20_40cm = desejaAnalise20_40cm
-      ? (numPontos / 10 < 1 ? 1 : Math.round(numPontos / 10))
-      : 0;
+    // 20-40cm analyses (only when area and points are positive)
+    const numAnalises20_40cm =
+      desejaAnalise20_40cm && alqueires > 0 && numPontos > 0
+        ? (numPontos / 10 < 1 ? 1 : Math.round(numPontos / 10))
+        : 0;
     const total20_40cm = numAnalises20_40cm * ANALISE_20_40_CM_VALOR_ANALISE;
 
     // Physical analyses

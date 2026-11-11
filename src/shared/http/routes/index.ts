@@ -15,6 +15,7 @@ import collaboratorsRouter from '@modules/collaborators/routes/collaborators.rou
 import analysesRouter from '@modules/analyses/routes/analyses.routes';
 import dashboardRouter from '@modules/dashboard/routes/dashboard.routes';
 import financialRouter from '@modules/financial/routes/financial.routes';
+import auditRouter from '@modules/audit/routes/audit.routes';
 
 const routes = Router();
 
@@ -34,6 +35,7 @@ routes.use('/collaborators', collaboratorsRouter);
 routes.use('/analyses', analysesRouter);
 routes.use('/dashboard', dashboardRouter);
 routes.use('/financial', financialRouter);
+routes.use('/audit-logs', auditRouter);
 
 
 export default routes;

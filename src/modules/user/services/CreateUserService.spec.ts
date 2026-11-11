@@ -43,7 +43,42 @@ describe('CreateUserService', () => {
 
     expect(result).toHaveProperty('id', 'usr-1');
     expect(result.password).toBeUndefined();
+    expect(result.status).toBe('Ativo');
+    expect(Array.isArray(result.permissions)).toBe(true);
     expect(mockUsersRepo.save).toHaveBeenCalled();
+  });
+
+  it('should persist normalized role and explicit custom permissions', async () => {
+    mockUsersRepo.findByEmail.mockResolvedValue(null);
+
+    const service = new CreateUserService();
+    const result = await service.execute({
+      name: 'Maria Financeiro',
+      email: 'maria@farmflow.com',
+      password: 'password123',
+      role: 'financial',
+      phone: '(45) 99999-0000',
+      status: 'Ativo',
+      permissions: ['dashboard', 'financial'],
+    });
+
+    expect(result.role).toBe('Financeiro');
+    expect(result.phone).toBe('(45) 99999-0000');
+    expect(result.permissions).toEqual(['dashboard', 'financial']);
+  });
+
+  it('should populate default permissions when permissions array is omitted', async () => {
+    mockUsersRepo.findByEmail.mockResolvedValue(null);
+
+    const service = new CreateUserService();
+    const result = await service.execute({
+      name: 'Carlos Analista',
+      email: 'carlos@farmflow.com',
+      password: 'password123',
+      role: 'Analista',
+    });
+
+    expect(result.permissions).toEqual(['dashboard', 'farms', 'analysis', 'reports']);
   });
 
   it('should throw AppError if user with email already exists', async () => {

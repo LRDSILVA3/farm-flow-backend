@@ -118,4 +118,24 @@ describe('SoilSamplingService', () => {
     expect(result.details.totalServicoAlq).toBeCloseTo(13915.09, 2);
     expect(result.valorTotalSugerido).toBeCloseTo(19332.39, 1);
   });
+
+  it('should return zero total and zero 20-40cm analyses when area or points are zero', () => {
+    const service = new SoilSamplingService(mockCostVariables);
+
+    const result = service.calculate({
+      isReanalise: false,
+      comNotaFiscal: true,
+      alqueires: 0,
+      numPontos: 0,
+      desejaAduboBase: true,
+      desejaEnxofre: true,
+      desejaMicronutrientes: true,
+      desejaAnalise20_40cm: true,
+      desejaAnaliseFisica: false,
+    });
+
+    expect(result.details.numAnalises20_40cm).toBe(0);
+    expect(result.valorTotalSugerido).toBe(0);
+    expect(result.totalValue).toBe(0);
+  });
 });

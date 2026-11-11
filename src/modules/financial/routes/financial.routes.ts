@@ -1,11 +1,31 @@
 import { Router, Request, Response } from 'express';
 import { getRepository } from 'typeorm';
+import ensureAuthenticated from '@shared/http/middlewares/ensureAuthenticated';
+import { ensurePermission } from '@shared/http/middlewares/ensurePermission';
 import FinancialTransaction from '../typeorm/entities/FinancialTransaction';
+import {
+  diffObjects,
+  formatChangesSummary,
+  recordAudit,
+} from '@modules/audit/services/AuditLogService';
+
+const FINANCIAL_AUDIT_FIELDS = {
+  description: 'Descrição',
+  type: 'Tipo',
+  category: 'Categoria',
+  amount: { label: 'Valor', format: 'currency' as const },
+  status: 'Status',
+  due_date: 'Vencimento',
+  payment_date: 'Data Pagamento',
+  payment_method: 'Forma Pagamento',
+};
 
 const financialRouter = Router();
 
+financialRouter.use(ensureAuthenticated);
+
 // Listar transações com filtros
-financialRouter.get('/transactions', async (req: Request, res: Response) => {
+financialRouter.get('/transactions', ensurePermission('financial'), async (req: Request, res: Response) => {
   const repo = getRepository(FinancialTransaction);
   const { type, status, category } = req.query;
 
@@ -29,7 +49,7 @@ financialRouter.get('/transactions', async (req: Request, res: Response) => {
 });
 
 // Resumo financeiro consolidado
-financialRouter.get('/summary', async (req: Request, res: Response) => {
+financialRouter.get('/summary', ensurePermission('financial'), async (req: Request, res: Response) => {
   const repo = getRepository(FinancialTransaction);
   const all = await repo.find();
 
@@ -62,7 +82,7 @@ financialRouter.get('/summary', async (req: Request, res: Response) => {
 });
 
 // Criar nova transação
-financialRouter.post('/transactions', async (req: Request, res: Response) => {
+financialRouter.post('/transactions', ensurePermission('financial', 'orders'), async (req: Request, res: Response) => {
   const repo = getRepository(FinancialTransaction);
   const transaction = repo.create({
     description: req.body.description,
@@ -79,17 +99,28 @@ financialRouter.post('/transactions', async (req: Request, res: Response) => {
   });
 
   await repo.save(transaction);
+  await recordAudit({
+    req,
+    module: 'financial',
+    action: 'CREATE',
+    entityId: transaction.id,
+    entityLabel: transaction.description,
+    summary: `Lançamento financeiro criado: ${transaction.description} (${Number(transaction.amount || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+    afterData: transaction,
+  });
   return res.status(201).json(transaction);
 });
 
 // Atualizar transação
-financialRouter.put('/transactions/:id', async (req: Request, res: Response) => {
+financialRouter.put('/transactions/:id', ensurePermission('financial'), async (req: Request, res: Response) => {
   const repo = getRepository(FinancialTransaction);
   const transaction = await repo.findOne(req.params.id);
 
   if (!transaction) {
     return res.status(404).json({ error: 'Transaction not found' });
   }
+
+  const beforeSnapshot = { ...transaction };
 
   if (req.body.description !== undefined) transaction.description = req.body.description;
   if (req.body.type !== undefined) transaction.type = req.body.type;
@@ -102,13 +133,35 @@ financialRouter.put('/transactions/:id', async (req: Request, res: Response) => 
   if (req.body.notes !== undefined) transaction.notes = req.body.notes;
 
   await repo.save(transaction);
+  const changes = diffObjects(beforeSnapshot, transaction, FINANCIAL_AUDIT_FIELDS);
+  await recordAudit({
+    req,
+    module: 'financial',
+    action: 'UPDATE',
+    entityId: transaction.id,
+    entityLabel: transaction.description,
+    summary: formatChangesSummary(changes) || `Lançamento atualizado: ${transaction.description}`,
+    changes,
+    beforeData: beforeSnapshot,
+    afterData: transaction,
+  });
   return res.json(transaction);
 });
 
 // Excluir transação
-financialRouter.delete('/transactions/:id', async (req: Request, res: Response) => {
+financialRouter.delete('/transactions/:id', ensurePermission('financial'), async (req: Request, res: Response) => {
   const repo = getRepository(FinancialTransaction);
+  const before = await repo.findOne(req.params.id);
   await repo.delete(req.params.id);
+  await recordAudit({
+    req,
+    module: 'financial',
+    action: 'DELETE',
+    entityId: req.params.id,
+    entityLabel: before?.description,
+    summary: `Lançamento excluído: ${before?.description || req.params.id}`,
+    beforeData: before,
+  });
   return res.status(204).send();
 });
 

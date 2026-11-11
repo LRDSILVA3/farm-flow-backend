@@ -24,6 +24,15 @@ class User {
   role: string;
 
   @Column({ nullable: true })
+  phone?: string;
+
+  @Column({ default: 'Ativo' })
+  status: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  permissions?: string[];
+
+  @Column({ nullable: true })
   avatar_url: string;
 
   @CreateDateColumn()

@@ -56,6 +56,45 @@ describe('CreateSessionService', () => {
     expect(result).toHaveProperty('user');
     expect(result).toHaveProperty('token', 'jwt-token-xyz');
     expect(result.user.email).toBe('admin@farmflow.com');
+    expect(result.user.password).toBeUndefined();
+    expect(result.user.status).toBe('Ativo');
+    expect(Array.isArray(result.user.permissions)).toBe(true);
+  });
+
+  it('should throw AppError if password is empty when user has stored hash', async () => {
+    mockUsersRepo.findByEmail.mockResolvedValue({
+      id: 'usr-1',
+      email: 'admin@farmflow.com',
+      password: 'hashed-password',
+      status: 'Ativo',
+    });
+
+    const service = new CreateSessionService();
+    await expect(
+      service.execute({
+        email: 'admin@farmflow.com',
+        password: '',
+      }),
+    ).rejects.toMatchObject({ statusCode: 401 });
+  });
+
+  it('should throw 403 AppError if user is Inativo', async () => {
+    mockUsersRepo.findByEmail.mockResolvedValue({
+      id: 'usr-1',
+      email: 'inactive@farmflow.com',
+      password: 'hashed-password',
+      status: 'Inativo',
+      role: 'Financeiro',
+    });
+    (compare as any).mockResolvedValue(true);
+
+    const service = new CreateSessionService();
+    await expect(
+      service.execute({
+        email: 'inactive@farmflow.com',
+        password: 'correct-password',
+      }),
+    ).rejects.toMatchObject({ statusCode: 403 });
   });
 
   it('should throw AppError if user email is not found', async () => {
