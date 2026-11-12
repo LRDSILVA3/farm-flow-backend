@@ -34,6 +34,14 @@ export interface SoilSamplingCalculationResult {
     totalAnalises: number;
     numAnalises20_40cm: number;
     numAnalisesFisicas: number;
+    numAnalisesCompleta: number;
+    numAnalisesMacro: number;
+    percAnalisesCompleta: number;
+    percAnalisesMacro: number;
+    valorTeoricoAnaliseUnit: number;
+    custoCampoCalculado: number;
+    saldoAnalisesTotal: number;
+    fatorDescontoAnalise: number;
     numMinimoAnalises: number;
     hectares: number;
     haPorPonto: number;
@@ -196,6 +204,49 @@ export class SoilSamplingService {
     const sugeridoPerPoint = numPontos > 0 ? valorTotalSugerido / numPontos : 0;
     const haPorPonto = numPontos > 0 ? hectares / numPontos : 0;
 
+    // Excel C12: Field service cost
+    const custoCampoCalculado = Math.max(
+      totalServicoAlq,
+      0.4 * (numPontos + numAnalises20_40cm) * VALOR_PONTO_CONFERE_COMPACTACAO * jurosFactor
+    );
+
+    // Excel B7: Theoretical unit value of analyses including subsuperficial and physical
+    const valorTeoricoAnaliseUnit =
+      valorUnitarioAnalise + (numPontos > 0 ? (total20_40cm + totalFisicas) / numPontos : 0);
+
+    // Excel C13: Net budget available for lab analyses (B9 - C12)
+    const saldoAnalisesTotal = totalValue - custoCampoCalculado;
+    const valorAnalisePorPontoFechado = numPontos > 0 ? saldoAnalisesTotal / numPontos : 0;
+
+    // Excel C14: Relative discount factor on lab analyses
+    const fatorDescontoAnalise =
+      valorTeoricoAnaliseUnit > 0
+        ? (valorAnalisePorPontoFechado - valorTeoricoAnaliseUnit) / valorTeoricoAnaliseUnit
+        : 0;
+
+    // Excel B17 / I25: % de Analises Completa via regressão cúbica
+    const poly =
+      148.15 * Math.pow(fatorDescontoAnalise, 3) +
+      55.556 * Math.pow(fatorDescontoAnalise, 2) +
+      249.07 * fatorDescontoAnalise +
+      100.06;
+
+    // Se não há desconto comercial (B9 >= B8), 100% das análises são completas e macro simples é 0
+    const percAnalisesCompleta =
+      desconto <= 0 || fatorDescontoAnalise >= 0
+        ? 100
+        : Math.max(0, Math.min(100, poly));
+    const percAnalisesMacro = 100 - percAnalisesCompleta;
+
+    // Excel B21 & B22: Number of Complete vs Macro analyses
+    const numAnalisesCompleta =
+      numPontos > 0
+        ? (percAnalisesCompleta < 20
+            ? Math.round(0.20 * numPontos)
+            : Math.floor((percAnalisesCompleta * numPontos) / 100))
+        : 0;
+    const numAnalisesMacro = Math.max(0, numPontos - numAnalisesCompleta);
+
     const determinationsParts: string[] = [];
     if (desejaAduboBase) determinationsParts.push('ADUBAÇÃO DE BASE');
     if (desejaEnxofre) determinationsParts.push('ENXOFRE');
@@ -221,6 +272,14 @@ export class SoilSamplingService {
         totalAnalises,
         numAnalises20_40cm,
         numAnalisesFisicas,
+        numAnalisesCompleta,
+        numAnalisesMacro,
+        percAnalisesCompleta,
+        percAnalisesMacro,
+        valorTeoricoAnaliseUnit,
+        custoCampoCalculado,
+        saldoAnalisesTotal,
+        fatorDescontoAnalise,
         numMinimoAnalises,
         hectares,
         haPorPonto,
