@@ -72,6 +72,10 @@ describe('SoilSamplingService', () => {
     expect(result.descontoPercentual).toBeCloseTo(6.39, 1);
     expect(result.totalValue).toBeCloseTo(19320.34, 1);
     expect(result.totalValuePerAlq).toBeCloseTo(386.41, 2);
+    expect(result.details.numAnalisesCompleta).toBe(16);
+    expect(result.details.numAnalisesMacro).toBe(25);
+    expect(result.details.numAnalises20_40cm).toBe(4);
+    expect(result.details.percAnalisesCompleta).toBeCloseTo(40.53, 1);
   });
 
   it('should calculate closed budget specifying valorFechadoManual directly', () => {
@@ -138,4 +142,41 @@ describe('SoilSamplingService', () => {
     expect(result.valorTotalSugerido).toBe(0);
     expect(result.totalValue).toBe(0);
   });
+
+    it('should calculate discount automatically when default cost variable is present', () => {
+      const varsWithDefaultDiscount = [
+        ...mockCostVariables,
+        { id: '100', code: 'DESCONTO_COMERCIAL_PADRAO_PERCENTUAL', name: 'Desconto Comercial Padrao', value: 5.0, description: '' }
+      ];
+      const service = new SoilSamplingService(varsWithDefaultDiscount);
+      const result = service.calculate({
+        isReanalise: false,
+        comNotaFiscal: true,
+        alqueires: 50,
+        numPontos: 41,
+        vencimentoServico: '30/06/2025',
+      });
+
+      expect(result.valorTotalSugerido).toBeCloseTo(20640.22, 1);
+      expect(result.descontoPercentual).toBeCloseTo(5.0, 2);
+      expect(result.desconto).toBeCloseTo(20640.22 * 0.05, 1);
+      expect(result.totalValue).toBeCloseTo(20640.22 * 0.95, 1);
+    });
+
+    it('should calculate discount when descontoPercentualManual is passed', () => {
+      const service = new SoilSamplingService(mockCostVariables);
+      const result = service.calculate({
+        isReanalise: false,
+        comNotaFiscal: true,
+        alqueires: 50,
+        numPontos: 41,
+        vencimentoServico: '30/06/2025',
+        descontoPercentualManual: 6.3947,
+      });
+
+      expect(result.valorTotalSugerido).toBeCloseTo(20640.22, 1);
+      expect(result.descontoPercentual).toBeCloseTo(6.39, 1);
+      expect(result.totalValue).toBeCloseTo(19320.34, 1);
+    });
+
 });

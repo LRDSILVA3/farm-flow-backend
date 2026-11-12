@@ -14,6 +14,7 @@ const initialCostVariables = [
   { name: 'Valor Ponto Confere Compactacao', code: 'VALOR_PONTO_CONFERE_COMPACTACAO', value: 430.00, unit: 'R$/ponto', category: 'Conferência', description: 'Valor por ponto de conferencia de compactacao' },
   { name: 'Juros Pagamento Prazo Percentual', code: 'JUROS_PAGAMENTO_PRAZO_PERCENTUAL', value: 1.5, unit: '%/mês', category: 'Financeiro', description: 'Percentual de juros para pagamento a prazo' },
   { name: 'Data Base Calculo Juro', code: 'DATA_BASE_CALCULO_JURO', value: 20241231, unit: 'Data', category: 'Financeiro', description: 'Data base para cálculo de juros (YYYYMMDD)' },
+  { name: 'Desconto Comercial Padrão Sugerido', code: 'DESCONTO_COMERCIAL_PADRAO_PERCENTUAL', value: 0.0, unit: '%', category: 'Financeiro', description: 'Percentual padrão de desconto comercial pré-selecionado no pedido' },
   { name: 'Analise 20-40 CM Valor Analise', code: 'ANALISE_20_40_CM_VALOR_ANALISE', value: 70.00, unit: 'R$/análise', category: 'Laboratório', description: 'Valor da análise de 20-40 cm' },
   { name: 'Valor Analise Nova Area', code: 'VALOR_ANALISE_NOVA_AREA', value: 52.30, unit: 'R$/análise', category: 'Laboratório', description: 'Valor análise de nova área' },
   { name: 'Valor Analise Adubo Base', code: 'VALOR_ANALISE_ADUBO_BASE', value: 35.30, unit: 'R$/análise', category: 'Laboratório', description: 'Valor análise de adubo base' },
