@@ -23,3 +23,4 @@ export class AddDefaultCommercialDiscountCostVariable1790856601757 implements Mi
     `);
   }
 }
+
