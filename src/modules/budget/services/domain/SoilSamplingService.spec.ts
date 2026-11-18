@@ -179,4 +179,37 @@ describe('SoilSamplingService', () => {
       expect(result.totalValue).toBeCloseTo(19320.34, 1);
     });
 
+    it('should use 2026 defaults and calculate correctly with 2026 parameters', () => {
+      const service2026 = new SoilSamplingService([]);
+      const result = service2026.calculate({
+        isReanalise: false,
+        comNotaFiscal: true,
+        alqueires: 50,
+        numPontos: 41,
+        desejaAduboBase: true,
+        desejaEnxofre: true,
+        desejaMicronutrientes: false,
+        desejaAnalise20_40cm: true,
+        desejaAnaliseFisica: false,
+      });
+
+      // 2026 AP 50-100: 325.589199
+      expect(result.details.precoAlqServico).toBeCloseTo(325.59, 2);
+      expect(result.details.valorUnitarioAnalise).toBeCloseTo(91.40, 2); // 61.40 + 17.50 + 12.50
+      expect(result.details.numAnalises20_40cm).toBe(4);
+    });
+
+    it('should apply 20% discount (0.8 factor) when desejaAduboBase is false', () => {
+      const service2026 = new SoilSamplingService([]);
+      const result = service2026.calculate({
+        isReanalise: false,
+        comNotaFiscal: true,
+        alqueires: 50,
+        numPontos: 41,
+        desejaAduboBase: false,
+      });
+
+      // Without adubo base: 325.589199 * 0.8 = 260.47
+      expect(result.details.precoAlqServico).toBeCloseTo(325.589199 * 0.8, 2);
+    });
 });

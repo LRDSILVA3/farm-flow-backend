@@ -80,24 +80,25 @@ export class SoilSamplingService {
       valorFechadoManual,
     } = params;
 
-    const AP_ATE_50_ALQ = this.getVariableValue('AP_ATE_50_ALQ') || 295;
-    const AP_50_A_100_ALQ = this.getVariableValue('AP_50_A_100_ALQ') || 278.30;
-    const AP_MAIS_100_ALQ = this.getVariableValue('AP_MAIS_100_ALQ') || 262.55;
+    const AP_ATE_50_ALQ = this.getVariableValue('AP_ATE_50_ALQ') || 345.124551;
+    const AP_50_A_100_ALQ = this.getVariableValue('AP_50_A_100_ALQ') || 325.589199;
+    const AP_MAIS_100_ALQ = this.getVariableValue('AP_MAIS_100_ALQ') || 307.159622;
 
-    const REANALISE_ATE_50_ALQ = this.getVariableValue('REANALISE_ATE_50_ALQ') || 280;
-    const REANALISE_50_A_100_ALQ = this.getVariableValue('REANALISE_50_A_100_ALQ') || 264.15;
-    const REANALISE_MAIS_100_ALQ = this.getVariableValue('REANALISE_MAIS_100_ALQ') || 249.20;
+    const REANALISE_ATE_50_ALQ = this.getVariableValue('REANALISE_ATE_50_ALQ') || 330.124551;
+    const REANALISE_50_A_100_ALQ = this.getVariableValue('REANALISE_50_A_100_ALQ') || 311.438256;
+    const REANALISE_MAIS_100_ALQ = this.getVariableValue('REANALISE_MAIS_100_ALQ') || 293.809675;
 
-    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 430;
-    const VALOR_ANALISE_NOVA_AREA = this.getVariableValue('VALOR_ANALISE_NOVA_AREA') || 52.30;
-    const VALOR_ANALISE_ADUBO_BASE = this.getVariableValue('VALOR_ANALISE_ADUBO_BASE') || 35.30;
-    const VALOR_ANALISE_ENXOFRE = this.getVariableValue('VALOR_ANALISE_ENXOFRE') || 17.70;
-    const VALOR_ANALISE_MICRONUTRIENTES = this.getVariableValue('VALOR_ANALISE_MICRONUTRIENTES') || 20.00;
-    const ANALISE_20_40_CM_VALOR_ANALISE = this.getVariableValue('ANALISE_20_40_CM_VALOR_ANALISE') || 70.00;
-    const VALOR_ANALISE_FISICA_UNITARIO = this.getVariableValue('VALOR_ANALISE_FISICA_UNITARIO') || 42.30;
+    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111;
+    const VALOR_ANALISE_NOVA_AREA = this.getVariableValue('VALOR_ANALISE_NOVA_AREA') || 61.40;
+    const VALOR_ANALISE_ADUBO_BASE = this.getVariableValue('VALOR_ANALISE_ADUBO_BASE') || 17.50;
+    const VALOR_ANALISE_ENXOFRE = this.getVariableValue('VALOR_ANALISE_ENXOFRE') || 12.50;
+    const VALOR_ANALISE_MICRONUTRIENTES = this.getVariableValue('VALOR_ANALISE_MICRONUTRIENTES') || 29.55;
+    const ANALISE_20_40_CM_VALOR_ANALISE = this.getVariableValue('ANALISE_20_40_CM_VALOR_ANALISE') || 73.90;
+    const VALOR_ANALISE_FISICA_UNITARIO = this.getVariableValue('VALOR_ANALISE_FISICA_UNITARIO') || 33.30;
 
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20241231;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.5;
+    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
+    const DESCONTO_SEM_FORMULA_ADUBO = this.getVariableValue('DESCONTO_SEM_FORMULA_ADUBO') || 0.8;
 
     // Minimum number of analyses: Excel INPUT DADOS B15
     let numMinimoAnalises = 0;
@@ -144,7 +145,10 @@ export class SoilSamplingService {
       basePricePerAlq *= 0.93;
     }
 
-    const precoAlqServico = basePricePerAlq * jurosFactor;
+    let precoAlqServico = basePricePerAlq * jurosFactor;
+    if (!desejaAduboBase) {
+      precoAlqServico *= DESCONTO_SEM_FORMULA_ADUBO;
+    }
     const totalServicoAlq = alqueires * precoAlqServico;
 
     // Unit value of chemical analyses:

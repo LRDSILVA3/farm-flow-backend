@@ -63,10 +63,10 @@ export class EqualizaService {
     const escalonamentoFactor = 1 + 0.15 * (anosContrato - 1);
 
     // Base unit rates from BANCO DE DADOS or fallback defaults
-    const precoBaseAP = this.getVariableValue('TIER_1_AP_PRICE') || 295; // N7 in Excel
-    const precoBaseConf = this.getVariableValue('VALOR_ALQ_CONFERENCIA') || 65; // N4 in Excel
-    const precoBaseFolha = this.getVariableValue('VALOR_ALQ_FOLHA') || 60; // N10 in Excel
-    const precoBaseCompactacao = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 430; // B8 in Excel
+    const precoBaseAP = this.getVariableValue('TIER_1_AP_PRICE') || 345.124551; // N7 in Excel
+    const precoBaseConf = this.getVariableValue('VALOR_ALQ_CONFERENCIA') || 71.666667; // N4 in Excel
+    const precoBaseFolha = this.getVariableValue('VALOR_ALQ_FOLHA') || 18; // N10 in Excel
+    const precoBaseCompactacao = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111; // B8 in Excel
 
     // H23 in BANCO DE DADOS:
     // =$N$7*EQUALIZA!H33 + 'BANCO DE DADOS'!$N$7*EQUALIZA!H34*(1+(15%*(EQUALIZA!$K$32-1)))

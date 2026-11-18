@@ -161,4 +161,23 @@ describe('ConferenciaService', () => {
     expect(resHigher.details.travelCost).toBeGreaterThan(resOriginal.details.travelCost);
     expect(resHigher.totalValue).toBeGreaterThan(resOriginal.totalValue);
   });
+
+  it('should use 2026 defaults when initialized without variables', () => {
+    const service2026 = new ConferenciaService([]);
+    const result = service2026.calculate({
+      clienteDesejaNotaFiscal: 'S',
+      distanciaFazendaKm: 10,
+      vencimentoServico: '31/12/2025',
+      desejaAnaliseFisica: 'N',
+      percentualAnalises20_40cm: 10,
+      alqueires: 10,
+      numAnalises: 5,
+      totalAlqueires: 10,
+    });
+
+    // 2026 default km cost = 4.785714
+    expect(result.details.valorKmCalculated).toBeCloseTo(4.785714, 4);
+    expect(result.details.jurosFactor).toBe(1.0); // Exactly on 20251231
+    expect(result.details.custoAnalises20_40cm).toBeCloseTo(73.90 + 71.666667, 2);
+  });
 });

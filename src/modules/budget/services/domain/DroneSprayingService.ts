@@ -71,15 +71,15 @@ export class DroneSprayingService {
     const DRONE_VALOR_BEIRA_MATO = this.getVariableValue('DRONE_VALOR_BEIRA_MATO') || 0.50;
     const DRONE_VALOR_FIO_LUZ = this.getVariableValue('DRONE_VALOR_FIO_LUZ') || 1.00;
     const DRONE_VALOR_PONTO_RTK = this.getVariableValue('DRONE_VALOR_PONTO_RTK') || 500;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.5;
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
 
     // KM cost: dynamically computed from diesel if available
     const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
     let valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO');
     if (valorDiesel > 0) {
-      valorKm = (valorDiesel / 7) * 2 * 2.5;
+      valorKm = (valorDiesel / 7) * 4;
     } else if (valorKm === 0) {
-      valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA') || 4.96;
+      valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA') || 4.785714;
     }
 
     const areaAlqueires = areaHa > 0 ? areaHa / 2.42 : 0;

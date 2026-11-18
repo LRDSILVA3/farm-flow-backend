@@ -90,20 +90,20 @@ export class ATVService {
       itens = [],
     } = params;
 
-    const ATV_1_PRODUTO = this.getVariableValue('ATV_1_PRODUTO') || 290;
-    const ATV_2_PRODUTOS = this.getVariableValue('ATV_2_PRODUTOS') || 280;
-    const ATV_3_PRODUTOS = this.getVariableValue('ATV_3_PRODUTOS') || 260;
-    const VALOR_APLICACAO_ESTERCO = this.getVariableValue('VALOR_APLICACAO_ESTERCO') || 40.40;
-    const DIARIA_PA_CARREGADEIRA = this.getVariableValue('DIARIA_PA_CARREGADEIRA') || 2600;
-    const VALOR_KM_PRANCHA = this.getVariableValue('VALOR_KM_DESLOCAMENTO_PRANCHA') || 10;
-    const VALOR_KM_DESLOCAMENTO_VAZIO = this.getVariableValue('VALOR_KM_DESLOCAMENTO_VAZIO') || 6.12;
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20241231;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.5;
+    const ATV_1_PRODUTO = this.getVariableValue('ATV_1_PRODUTO') || 315;
+    const ATV_2_PRODUTOS = this.getVariableValue('ATV_2_PRODUTOS') || 310;
+    const ATV_3_PRODUTOS = this.getVariableValue('ATV_3_PRODUTOS') || 300;
+    const VALOR_APLICACAO_ESTERCO = this.getVariableValue('VALOR_APLICACAO_ESTERCO') || 45.00;
+    const DIARIA_PA_CARREGADEIRA = this.getVariableValue('DIARIA_PA_CARREGADEIRA') || 2400;
+    const VALOR_KM_PRANCHA = this.getVariableValue('VALOR_KM_DESLOCAMENTO_PRANCHA') || 13;
+    const VALOR_KM_DESLOCAMENTO_VAZIO = this.getVariableValue('VALOR_KM_DESLOCAMENTO_VAZIO') || 7.39;
+    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
 
     // Fuel derived values
     const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
-    let valorKmFrete = this.getVariableValue('VALOR_KM_FRETE');
-    let despesaViagem = this.getVariableValue('DESPESA_VIAGEM_ATV');
+    let valorKmFrete = this.getVariableValue('VALOR_KM_FRETE') || 17.82;
+    let despesaViagem = this.getVariableValue('DESPESA_VIAGEM_ATV') || 251.25;
 
     if (valorDiesel > 0) {
       valorKmFrete = Math.round(((valorDiesel / 1 * 2) / 0.94) * 100) / 100;
