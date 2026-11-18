@@ -106,3 +106,4 @@ export class UpdateCostVariablesFrom2026Spreadsheet1790856601758 implements Migr
     await queryRunner.query(`UPDATE "cost_variables" SET "value" = 1.500000 WHERE "code" = 'JUROS_PAGAMENTO_PRAZO_PERCENTUAL'`);
   }
 }
+
