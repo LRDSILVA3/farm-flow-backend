@@ -66,6 +66,9 @@ class Order {
   payments: any;
 
   @Column('jsonb', { nullable: true, default: () => "'[]'" })
+  payment_schedules: any;
+
+  @Column('jsonb', { nullable: true, default: () => "'[]'" })
   logs: any;
 
   @Column('jsonb', { nullable: true, default: () => "'[]'" })
