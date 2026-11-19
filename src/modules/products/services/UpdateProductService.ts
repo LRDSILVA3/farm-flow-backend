@@ -13,6 +13,7 @@ interface IRequest {
   price?: number;
   quantity?: number;
   min_stock?: number;
+  controls_stock?: boolean;
   supplier?: string;
   status?: string;
   description?: string;
@@ -43,6 +44,7 @@ class UpdateProductService {
     if (data.price !== undefined) product.price = Number(data.price);
     if (data.quantity !== undefined) product.quantity = Number(data.quantity);
     if (data.min_stock !== undefined) product.min_stock = Number(data.min_stock);
+    if (data.controls_stock !== undefined) product.controls_stock = Boolean(data.controls_stock);
     if (data.supplier !== undefined) product.supplier = data.supplier;
     if (data.status !== undefined) product.status = data.status;
     if (data.description !== undefined) product.description = data.description;

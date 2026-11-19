@@ -22,6 +22,7 @@ const PRODUCT_AUDIT_FIELDS = {
   price: { label: "Preço de Venda", format: "currency" as const },
   quantity: "Quantidade em Estoque",
   min_stock: "Estoque Mínimo",
+  controls_stock: "Controla Estoque",
   status: "Status",
 };
 

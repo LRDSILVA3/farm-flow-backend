@@ -12,6 +12,7 @@ interface IRequest {
   price?: number;
   quantity?: number;
   min_stock?: number;
+  controls_stock?: boolean;
   supplier?: string;
   status?: string;
   description?: string;
@@ -35,6 +36,7 @@ class CreateProductService {
       price: Number(data.price) || 0,
       quantity: Number(data.quantity) || 0,
       min_stock: Number(data.min_stock) || 0,
+      controls_stock: data.controls_stock === true,
       supplier: data.supplier,
       status: data.status || 'Ativo',
       description: data.description,

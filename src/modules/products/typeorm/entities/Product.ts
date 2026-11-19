@@ -35,6 +35,9 @@ class Product {
   @Column('decimal', { precision: 12, scale: 2, default: 0 })
   min_stock: number;
 
+  @Column({ default: false })
+  controls_stock: boolean;
+
   @Column({ nullable: true })
   supplier: string;
 

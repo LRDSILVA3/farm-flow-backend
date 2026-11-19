@@ -91,6 +91,7 @@ export class StockMovementService {
   public async getSummary(): Promise<{
     totalProducts: number;
     activeProducts: number;
+    stockControlledCount: number;
     lowStockCount: number;
     totalStockValue: number;
   }> {
@@ -100,22 +101,27 @@ export class StockMovementService {
     let lowStockCount = 0;
     let totalStockValue = 0;
     let activeProducts = 0;
+    let stockControlledCount = 0;
 
     for (const p of products) {
       if (p.status === 'Ativo') activeProducts++;
-      const qty = Number(p.quantity) || 0;
-      const cost = Number(p.cost_price) || Number(p.price) || 0;
-      const minStock = Number(p.min_stock) || 0;
+      if (p.controls_stock) {
+        stockControlledCount++;
+        const qty = Number(p.quantity) || 0;
+        const cost = Number(p.cost_price) || Number(p.price) || 0;
+        const minStock = Number(p.min_stock) || 0;
 
-      totalStockValue += qty * cost;
-      if (minStock > 0 && qty <= minStock) {
-        lowStockCount++;
+        totalStockValue += qty * cost;
+        if (minStock > 0 && qty <= minStock) {
+          lowStockCount++;
+        }
       }
     }
 
     return {
       totalProducts: products.length,
       activeProducts,
+      stockControlledCount,
       lowStockCount,
       totalStockValue: Math.round(totalStockValue * 100) / 100,
     };
