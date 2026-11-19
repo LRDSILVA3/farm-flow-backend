@@ -99,6 +99,11 @@ export class ATVService {
     const VALOR_KM_DESLOCAMENTO_VAZIO = this.getVariableValue('VALOR_KM_DESLOCAMENTO_VAZIO') || 7.39;
     const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
     const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
+    const ATV_DESCONTO_SEM_NF_PERCENTUAL = this.getVariableValue('ATV_DESCONTO_SEM_NF_PERCENTUAL') || 4.0;
+    const ATV_CAPACIDADE_CAMINHAO_ESTERCO = this.getVariableValue('ATV_CAPACIDADE_CAMINHAO_ESTERCO') || 8.5;
+    const ATV_CAPACIDADE_CAMINHAO_PADRAO = this.getVariableValue('ATV_CAPACIDADE_CAMINHAO_PADRAO') || 13.0;
+    const ATV_RENDIMENTO_ESTERCO_DIA = this.getVariableValue('ATV_RENDIMENTO_ESTERCO_DIA') || 200;
+    const ATV_RENDIMENTO_PADRAO_DIA = this.getVariableValue('ATV_RENDIMENTO_PADRAO_DIA') || 28;
 
     // Fuel derived values
     const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
@@ -179,18 +184,22 @@ export class ATVService {
       let cargas = 0;
       let investimentoFrete = 0;
       if (item.cobraFrete) {
-        cargas = isEsterco ? Math.ceil(item.toneladas / 8.5) : Math.ceil(item.toneladas / 13);
+        cargas = isEsterco
+          ? Math.ceil(item.toneladas / ATV_CAPACIDADE_CAMINHAO_ESTERCO)
+          : Math.ceil(item.toneladas / ATV_CAPACIDADE_CAMINHAO_PADRAO);
         const distKm = item.distanciaFreteKm || distanciaIdaKm;
         const custoPorKm = cargas * distKm * 2 * valorKmFrete;
         const custoMinimoViagem = cargas * despesaViagem;
         investimentoFrete = Math.max(custoMinimoViagem, custoPorKm) * jurosFactor;
       } else {
-        cargas = isEsterco ? Math.ceil(item.toneladas / 8.5) : Math.ceil(item.toneladas / 13);
+        cargas = isEsterco
+          ? Math.ceil(item.toneladas / ATV_CAPACIDADE_CAMINHAO_ESTERCO)
+          : Math.ceil(item.toneladas / ATV_CAPACIDADE_CAMINHAO_PADRAO);
       }
 
       const diasItem = isEsterco
-        ? item.toneladas / (200 * quantosCaminhoes)
-        : areaAlq / (28 * quantosCaminhoes);
+        ? item.toneladas / (ATV_RENDIMENTO_ESTERCO_DIA * quantosCaminhoes)
+        : areaAlq / (ATV_RENDIMENTO_PADRAO_DIA * quantosCaminhoes);
 
       totalAreaAlq += areaAlq;
       totalToneladas += item.toneladas;
@@ -240,7 +249,7 @@ export class ATVService {
     }
 
     // Desconto NF (Excel Q19)
-    const descontoNF = !comNotaFiscal ? baseServicoFrete * 0.04 : 0;
+    const descontoNF = !comNotaFiscal ? (baseServicoFrete * ATV_DESCONTO_SEM_NF_PERCENTUAL) / 100 : 0;
 
     const totalValue = Math.max(
       0,

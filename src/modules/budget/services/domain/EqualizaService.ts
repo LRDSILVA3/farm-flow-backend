@@ -59,14 +59,20 @@ export class EqualizaService {
     // Percentage for Conferencia = 1 - AP
     const percentualAnualConf = Math.max(0, 1 - percentualAnualAP);
 
-    // Annual inflation / escalation factor: (1 + (0.15 * (anosContrato - 1)))
-    const escalonamentoFactor = 1 + 0.15 * (anosContrato - 1);
+    // Annual inflation / escalation factor: (1 + (escalonamentoRate * (anosContrato - 1)))
+    const EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL =
+      this.getVariableValue('EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL') || 15.0;
+    const escalonamentoFactor = 1 + (EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL / 100) * (anosContrato - 1);
 
     // Base unit rates from BANCO DE DADOS or fallback defaults
     const precoBaseAP = this.getVariableValue('TIER_1_AP_PRICE') || 345.124551; // N7 in Excel
     const precoBaseConf = this.getVariableValue('VALOR_ALQ_CONFERENCIA') || 71.666667; // N4 in Excel
     const precoBaseFolha = this.getVariableValue('VALOR_ALQ_FOLHA') || 18; // N10 in Excel
     const precoBaseCompactacao = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111; // B8 in Excel
+
+    const EQUALIZA_FATOR_CONFERENCIA = this.getVariableValue('EQUALIZA_FATOR_CONFERENCIA') || 8.0;
+    const EQUALIZA_FATOR_FOLHA = this.getVariableValue('EQUALIZA_FATOR_FOLHA') || 0.10;
+    const EQUALIZA_CUSTO_FUNGO_NEMA = this.getVariableValue('EQUALIZA_CUSTO_FUNGO_NEMA') || 30.00;
 
     // H23 in BANCO DE DADOS:
     // =$N$7*EQUALIZA!H33 + 'BANCO DE DADOS'!$N$7*EQUALIZA!H34*(1+(15%*(EQUALIZA!$K$32-1)))
@@ -76,14 +82,16 @@ export class EqualizaService {
 
     // H24 in BANCO DE DADOS:
     const custoUnitarioConferencia = Math.round(
-      percentualAnualConf * (precoBaseConf * 8 * percentualAnualAP + precoBaseConf * 8 * percentualAnualConf * escalonamentoFactor)
+      percentualAnualConf *
+        (precoBaseConf * EQUALIZA_FATOR_CONFERENCIA * percentualAnualAP +
+          precoBaseConf * EQUALIZA_FATOR_CONFERENCIA * percentualAnualConf * escalonamentoFactor)
     );
 
     const custoUnitarioFolha = incluirFolha
-      ? Math.round(precoBaseFolha * 0.1)
+      ? Math.round(precoBaseFolha * EQUALIZA_FATOR_FOLHA)
       : 0;
 
-    const custoUnitarioFungoNema = incluirFungoNema ? 30 : 0;
+    const custoUnitarioFungoNema = incluirFungoNema ? EQUALIZA_CUSTO_FUNGO_NEMA : 0;
 
     const custoUnitarioCompactacao = incluirCompactacao
       ? Math.round((precoBaseCompactacao / 10) * percentualAnualAP + (precoBaseCompactacao / 10) * percentualAnualConf * escalonamentoFactor)

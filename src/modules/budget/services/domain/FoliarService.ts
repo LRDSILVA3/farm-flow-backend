@@ -94,7 +94,8 @@ export class FoliarService {
 
     // LucasRafael.xlsm 'INPUT FOLHA '!E6 unified formula (replaces old A/P split):
     // =IF(C6=0, 0, (B6*'BANCO DE DADOS'!$B$9 + C6*'BANCO DE DADOS'!$B$11) * IF($E$3="S", 1, 0.93) * $F$2 + ('BANCO DE DADOS'!$B$12 * $E$4 * 2 / $B$26 * B6))
-    const nfFactor = clienteDesejaNotaFiscal === 'S' ? 1 : 0.93;
+    const FATOR_SEM_NOTA_FISCAL = this.getVariableValue('FATOR_SEM_NOTA_FISCAL') || 0.93;
+    const nfFactor = clienteDesejaNotaFiscal === 'S' ? 1 : FATOR_SEM_NOTA_FISCAL;
     const totalValue =
       numPontos > 0
         ? (alqueires * VALOR_ALQ_FOLHA + numPontos * VALOR_ANALISE_FOLIAR) * nfFactor * jurosFactor + travelCost

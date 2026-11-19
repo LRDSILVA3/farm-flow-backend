@@ -143,8 +143,9 @@ export class SoilSamplingService {
       else basePricePerAlq = REANALISE_50_A_100_ALQ;
     }
 
+    const FATOR_SEM_NOTA_FISCAL = this.getVariableValue('FATOR_SEM_NOTA_FISCAL') || 0.93;
     if (!comNotaFiscal) {
-      basePricePerAlq *= 0.93;
+      basePricePerAlq *= FATOR_SEM_NOTA_FISCAL;
     }
 
     let precoAlqServico = basePricePerAlq * jurosFactorUnrounded;
@@ -235,7 +236,9 @@ export class SoilSamplingService {
     // In LucasRafael.xlsm (2026) / budget.xlsm:
     // Without commercial discount (B9 >= B8), 100% of analyses are complete.
     // With commercial discount, standard baseline is 40% Completa and 60% Macro Simples (B17 = 40 in LucasRafael.xlsm).
-    const percAnalisesCompleta = desconto <= 0 ? 100 : 40;
+    const PERC_COMPLETA_COM_DESCONTO_PADRAO =
+      this.getVariableValue('PERC_COMPLETA_COM_DESCONTO_PADRAO') || 40;
+    const percAnalisesCompleta = desconto <= 0 ? 100 : PERC_COMPLETA_COM_DESCONTO_PADRAO;
     const percAnalisesMacro = 100 - percAnalisesCompleta;
 
     // Excel B21 & B22: Number of Complete vs Macro analyses

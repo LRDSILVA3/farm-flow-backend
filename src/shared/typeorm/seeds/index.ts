@@ -77,6 +77,19 @@ const initialCostVariables = [
   { name: 'Taxa Depreciacao Equipamento', code: 'TAXA_DEPREC_EQUIP', value: 0.10, unit: 'taxa', category: 'Equipamentos', description: 'Taxa de depreciação de equipamento' },
   { name: 'Custo Analise Macro', code: 'CUSTO_ANALISE_MACRO', value: 45.00, unit: 'R$/análise', category: 'Laboratório', description: 'Custo de referência análise macro' },
   { name: 'Custo Analise Fisica', code: 'CUSTO_ANALISE_FISICA', value: 25.00, unit: 'R$/análise', category: 'Laboratório', description: 'Custo de referência análise física' },
+  { name: 'Juros Coleta Foliar Percentual', code: 'JUROS_FOLIAR_PERCENTUAL', value: 3.0, unit: '%/mês', category: 'Coleta Foliar', description: 'Taxa de juros para pagamento a prazo em Coleta Foliar (INPUT FOLHA!F2 = 3% a.m.)' },
+  { name: 'Fator Sem Nota Fiscal Padrão', code: 'FATOR_SEM_NOTA_FISCAL', value: 0.93, unit: 'fator', category: 'Fiscal', description: 'Fator multiplicador do valor quando o cliente não solicita NF (0.93 = 7% desconto)' },
+  { name: 'Equaliza Custo Fungo Nematoide', code: 'EQUALIZA_CUSTO_FUNGO_NEMA', value: 30.00, unit: 'R$/Alq', category: 'Equalização de Serviços', description: 'Custo unitário por alqueire para Mapeamento de Fungo e Nematóide no Equaliza' },
+  { name: 'Equaliza Escalonamento Anual', code: 'EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL', value: 15.00, unit: '%/ano', category: 'Equalização de Serviços', description: 'Percentual de escalonamento anual de custos em contratos plurianuais (15% a.a.)' },
+  { name: 'Equaliza Fator Folha', code: 'EQUALIZA_FATOR_FOLHA', value: 0.10, unit: 'fator', category: 'Equalização de Serviços', description: 'Fator multiplicador do valor folha no Equaliza (padrão 0.1)' },
+  { name: 'Equaliza Fator Conferencia', code: 'EQUALIZA_FATOR_CONFERENCIA', value: 8.00, unit: 'fator', category: 'Equalização de Serviços', description: 'Fator multiplicador de alqueires/visitas para conferência no Equaliza (padrão 8.0)' },
+  { name: 'Drone Pulverização Fator Sólido', code: 'DRONE_FATOR_SOLIDO', value: 0.90, unit: 'fator', category: 'Drone Pulverização', description: 'Fator multiplicador para aplicação sólida com drone (BANCO DE DADOS!B38 = 0,90)' },
+  { name: 'ATV Desconto Sem NF', code: 'ATV_DESCONTO_SEM_NF_PERCENTUAL', value: 4.00, unit: '%', category: 'Aplicação ATV', description: 'Percentual de desconto para aplicação ATV sem Nota Fiscal (padrão 4%)' },
+  { name: 'ATV Carga Caminhão Esterco', code: 'ATV_CAPACIDADE_CAMINHAO_ESTERCO', value: 8.50, unit: 'Ton/carga', category: 'Aplicação ATV', description: 'Capacidade média de carga do caminhão para esterco / cama de frango (padrão 8.5 ton)' },
+  { name: 'ATV Carga Caminhão Padrão', code: 'ATV_CAPACIDADE_CAMINHAO_PADRAO', value: 13.00, unit: 'Ton/carga', category: 'Aplicação ATV', description: 'Capacidade média de carga do caminhão para calcário, gesso e fertilizantes (padrão 13 ton)' },
+  { name: 'ATV Rendimento Diário Esterco', code: 'ATV_RENDIMENTO_ESTERCO_DIA', value: 200.00, unit: 'Ton/dia', category: 'Aplicação ATV', description: 'Rendimento operacional diário por caminhão para esterco / cama de frango (padrão 200 ton/dia)' },
+  { name: 'ATV Rendimento Diário Padrão', code: 'ATV_RENDIMENTO_PADRAO_DIA', value: 28.00, unit: 'Alq/dia', category: 'Aplicação ATV', description: 'Rendimento operacional diário por caminhão em alqueires para produtos padrão (padrão 28 alq/dia)' },
+  { name: 'Percentual Análise Completa com Desconto', code: 'PERC_COMPLETA_COM_DESCONTO_PADRAO', value: 40.00, unit: '%', category: 'Amostragem AP', description: 'Percentual padrão de análises completas quando há desconto comercial no pedido (padrão 40%)' },
 ];
 
 const initialServices = [

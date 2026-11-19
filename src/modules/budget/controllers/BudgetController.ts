@@ -75,7 +75,10 @@ export default class BudgetController {
   };
 
   public calculateBiological = async (request: Request, response: Response): Promise<Response> => {
-    const service = new BiologicalProductsService(request.body.monthlyRate || 1.2);
+    const costVariables = await this.getCostVariables();
+    const jurosVar = costVariables.find((v) => v.code === 'JUROS_PAGAMENTO_PRAZO_PERCENTUAL');
+    const defaultRate = jurosVar ? Number(jurosVar.value) : 1.2;
+    const service = new BiologicalProductsService(request.body.monthlyRate || defaultRate);
     const result = service.calculate(request.body);
     return response.json(result);
   };

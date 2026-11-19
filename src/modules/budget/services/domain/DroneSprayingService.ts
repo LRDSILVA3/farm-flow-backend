@@ -129,21 +129,36 @@ export class DroneSprayingService {
     }
 
     // Excel B26: Juro do Financeiro
+    const DATA_BASE_CALCULO_JURO_DRONE =
+      this.getVariableValue('DATA_BASE_CALCULO_JURO_DRONE') ||
+      this.getVariableValue('DATA_BASE_CALCULO_JURO');
+
     const [day, month, year] = vencimentoServico.split('/').map(Number);
     const vencimentoDate = new Date(year, month - 1, day);
-    const fimMesAtual = endOfMonth(new Date());
 
-    const daysDiff = differenceInDays(vencimentoDate, fimMesAtual);
+    let baseDate: Date;
+    if (DATA_BASE_CALCULO_JURO_DRONE > 0) {
+      const yearJuro = Math.floor(DATA_BASE_CALCULO_JURO_DRONE / 10000);
+      const monthJuro = Math.floor((DATA_BASE_CALCULO_JURO_DRONE % 10000) / 100);
+      const dayJuro = DATA_BASE_CALCULO_JURO_DRONE % 100;
+      baseDate = new Date(yearJuro, monthJuro - 1, dayJuro);
+    } else {
+      baseDate = endOfMonth(new Date());
+    }
+
+    const daysDiff = differenceInDays(vencimentoDate, baseDate);
     const jurosFactor =
       daysDiff > 0
         ? Math.pow(1 + JUROS_PAGAMENTO_PRAZO_PERCENTUAL / 100, daysDiff / 30)
         : 1;
 
-    // Excel B27: Fator de correção pra sólido (0.9 se sólido)
-    const fatorSolidoBase = tipoSolidoOuLiquido === 'S' ? 0.9 : 1;
+    // Excel B27: Fator de correção pra sólido (0.9 se sólido, BANCO DE DADOS!B38)
+    const DRONE_FATOR_SOLIDO = this.getVariableValue('DRONE_FATOR_SOLIDO') || 0.9;
+    const fatorSolidoBase = tipoSolidoOuLiquido === 'S' ? DRONE_FATOR_SOLIDO : 1;
 
     // Excel B28: Correção imposto (0.93 se sem NF)
-    const fatorImposto = comNotaFiscal ? 1 : 0.93;
+    const FATOR_SEM_NOTA_FISCAL = this.getVariableValue('FATOR_SEM_NOTA_FISCAL') || 0.93;
+    const fatorImposto = comNotaFiscal ? 1 : FATOR_SEM_NOTA_FISCAL;
 
     // Excel B30: R$/Alq final
     const adicionalMapeamentoSolido =
