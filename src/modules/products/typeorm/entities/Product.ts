@@ -14,11 +14,35 @@ class Product {
   @Column()
   name: string;
 
-  @Column('decimal')
+  @Column({ nullable: true })
+  code: string;
+
+  @Column({ default: 'Outro' })
+  category: string;
+
+  @Column({ default: 'un' })
+  unit: string;
+
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
+  cost_price: number;
+
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
   price: number;
 
-  @Column('int')
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
   quantity: number;
+
+  @Column('decimal', { precision: 12, scale: 2, default: 0 })
+  min_stock: number;
+
+  @Column({ nullable: true })
+  supplier: string;
+
+  @Column({ default: 'Ativo' })
+  status: string;
+
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
   @CreateDateColumn()
   created_at: Date;

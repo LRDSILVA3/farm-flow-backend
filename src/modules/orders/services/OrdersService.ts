@@ -10,6 +10,14 @@ export class OrdersService {
   }
 
   public async create(data: Partial<Order>): Promise<Order> {
+    if (!data.client_id || data.client_id.trim() === '') {
+      throw new AppError('O cliente é obrigatório para cadastrar o pedido.', 400);
+    }
+    const numArea = Number(data.area || 0);
+    if (!numArea || numArea <= 0) {
+      throw new AppError('A área deve ser informada e maior que zero.', 400);
+    }
+
     const repo = getCustomRepository(OrdersRepository);
     const order = repo.create(data);
     await repo.save(order);

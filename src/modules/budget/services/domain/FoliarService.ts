@@ -2,12 +2,12 @@ import { differenceInDays } from 'date-fns';
 import { CostVariable } from './ConferenciaService';
 
 export interface FoliarParams {
-  calculoPor: 'A' | 'P'; // 'A' = Alqueire, 'P' = Ponto
+  calculoPor?: 'A' | 'P'; // Deprecated in LucasRafael.xlsm (2026): unified formula
   clienteDesejaNotaFiscal: 'S' | 'N';
   distanciaFazendaKm: number;
   vencimentoServico: string; // DD/MM/YYYY
   alqueires: number;
-  totalAlqueires: number;
+  totalAlqueires?: number;
   numPontos: number;
 }
 
@@ -88,38 +88,17 @@ export class FoliarService {
         ? Math.pow(1 + JUROS_FOLIAR_PERCENTUAL / 100, daysDifference / 30)
         : 1;
 
-    // Travel cost
-    const travelCostPerAlq = totalAlqueires > 0 ? (valorKm * distanciaFazendaKm) / totalAlqueires : 0;
+    // Travel cost (round-trip: * 2 in LucasRafael.xlsm 'INPUT FOLHA '!E6)
+    const travelCostPerAlq = totalAlqueires > 0 ? (valorKm * distanciaFazendaKm * 2) / totalAlqueires : 0;
     const travelCost = travelCostPerAlq * alqueires;
 
-    let custoBase = 0;
-    if (numPontos > 0 && alqueires > 0) {
-      if (calculoPor === 'A') {
-        // Alqueire calculation
-        const baseCost = alqueires * VALOR_ALQ_FOLHA + travelCost;
-        if (clienteDesejaNotaFiscal === 'S') {
-          custoBase = baseCost < VALOR_PONTO_CONFERE_COMPACTACAO ? VALOR_PONTO_CONFERE_COMPACTACAO : baseCost;
-        } else {
-          // If no NF, 0.93 discount factor in Excel
-          const minNoNf = VALOR_PONTO_CONFERE_COMPACTACAO * 0.93;
-          custoBase = baseCost < minNoNf ? minNoNf : baseCost * 0.93;
-        }
-      } else {
-        // Point calculation
-        const viagemCost = totalAlqueires > 0 ? (VALOR_VIAGEM_CONFERENCIA_FOLHA / totalAlqueires) * alqueires : 0;
-        const baseCost = numPontos * VALOR_PONTO_CONFERE_COMPACTACAO + travelCost + alqueires + viagemCost;
-        if (clienteDesejaNotaFiscal === 'S') {
-          custoBase = baseCost / 0.85;
-        } else {
-          custoBase = baseCost;
-        }
-      }
-    }
-
-    // In Excel, total for the job is custoBase * jurosFactor.
-    // Laboratory analysis is already included in the point price (R$ 0,00 in PEDIDO FOLHA CLIENTE).
-    // In PEDIDO FOLHA EMPRESA, laboratory cost (numPontos * 70) is separated from field cost.
-    const totalValue = custoBase * jurosFactor;
+    // LucasRafael.xlsm 'INPUT FOLHA '!E6 unified formula (replaces old A/P split):
+    // =IF(C6=0, 0, (B6*'BANCO DE DADOS'!$B$9 + C6*'BANCO DE DADOS'!$B$11) * IF($E$3="S", 1, 0.93) * $F$2 + ('BANCO DE DADOS'!$B$12 * $E$4 * 2 / $B$26 * B6))
+    const nfFactor = clienteDesejaNotaFiscal === 'S' ? 1 : 0.93;
+    const totalValue =
+      numPontos > 0
+        ? (alqueires * VALOR_ALQ_FOLHA + numPontos * VALOR_ANALISE_FOLIAR) * nfFactor * jurosFactor + travelCost
+        : 0;
     const custoLaboratorial = numPontos * VALOR_ANALISE_FOLIAR;
     const custoCampoCalculado = Math.max(0, totalValue - custoLaboratorial);
 

@@ -114,6 +114,7 @@ export class SoilSamplingService {
 
     // Parse dates and calculate interest factor
     let jurosFactor = 1;
+    let jurosFactorUnrounded = 1;
     if (vencimentoServico && vencimentoServico.trim() !== '') {
       const [day, month, year] = vencimentoServico.split('/').map(Number);
       const vencimentoDate = new Date(year, month - 1, day);
@@ -125,7 +126,8 @@ export class SoilSamplingService {
 
       const daysDifference = differenceInDays(vencimentoDate, dataBaseJuroDate);
       if (daysDifference > 0) {
-        jurosFactor = Math.pow(1 + JUROS_PAGAMENTO_PRAZO_PERCENTUAL / 100, daysDifference / 30);
+        jurosFactorUnrounded = Math.pow(1 + JUROS_PAGAMENTO_PRAZO_PERCENTUAL / 100, daysDifference / 30);
+        jurosFactor = Math.round(jurosFactorUnrounded * 1000) / 1000;
       }
     }
 
@@ -145,7 +147,7 @@ export class SoilSamplingService {
       basePricePerAlq *= 0.93;
     }
 
-    let precoAlqServico = basePricePerAlq * jurosFactor;
+    let precoAlqServico = basePricePerAlq * jurosFactorUnrounded;
     if (!desejaAduboBase) {
       precoAlqServico *= DESCONTO_SEM_FORMULA_ADUBO;
     }
@@ -173,13 +175,22 @@ export class SoilSamplingService {
 
     const totalAnalises = numPontos * valorUnitarioAnalise + total20_40cm + totalFisicas;
 
-    // Total calculation: Excel B8 compares area method vs point method
-    const metodo1 = totalServicoAlq + totalAnalises;
-    const metodo2 =
-      (numPontos + numAnalises20_40cm) * VALOR_PONTO_CONFERE_COMPACTACAO * 0.4 * jurosFactor +
-      (numPontos + numAnalises20_40cm) * valorUnitarioAnalise * 0.7;
+    // Excel B7: Theoretical unit value of analyses including subsuperficial and physical
+    const valorTeoricoAnaliseUnit =
+      valorUnitarioAnalise + (numPontos > 0 ? (total20_40cm + totalFisicas) / numPontos : 0);
 
-    const valorTotalSugerido = Math.max(metodo1, metodo2);
+    // Total calculation: Excel B8 compares area method vs point method
+    // In LucasRafael.xlsm (2026):
+    // IF((B5*B12 + B6*B7)*D10 > ((B6+B23)*'BANCO DE DADOS'!B8*0.4 + (B6+B23)*B7*0.7)*D10,
+    //    (B5*B12 + B6*B7)*D10,
+    //    ((B23+B6)*0.4*'BANCO DE DADOS'!B8 + (B6+B23)*B7*0.7)*D10)
+    const metodo1 = (totalServicoAlq + totalAnalises) * jurosFactor;
+    const metodo2 =
+      ((numPontos + numAnalises20_40cm) * VALOR_PONTO_CONFERE_COMPACTACAO * 0.4 +
+        (numPontos + numAnalises20_40cm) * valorTeoricoAnaliseUnit * 0.7) *
+      jurosFactor;
+
+    const valorTotalSugerido = alqueires > 0 ? Math.max(metodo1, metodo2) : 0;
 
     // Desconto padrão da variável de custo se não houver desconto ou valor fechado informado manualmente
     const defaultDiscountPercent = this.getVariableValue('DESCONTO_COMERCIAL_PADRAO_PERCENTUAL') || 0;
@@ -208,15 +219,8 @@ export class SoilSamplingService {
     const sugeridoPerPoint = numPontos > 0 ? valorTotalSugerido / numPontos : 0;
     const haPorPonto = numPontos > 0 ? hectares / numPontos : 0;
 
-    // Excel C12: Field service cost
-    const custoCampoCalculado = Math.max(
-      totalServicoAlq,
-      0.4 * (numPontos + numAnalises20_40cm) * VALOR_PONTO_CONFERE_COMPACTACAO * jurosFactor
-    );
-
-    // Excel B7: Theoretical unit value of analyses including subsuperficial and physical
-    const valorTeoricoAnaliseUnit =
-      valorUnitarioAnalise + (numPontos > 0 ? (total20_40cm + totalFisicas) / numPontos : 0);
+    // Excel C12: Field service cost (B12 * B5 in LucasRafael.xlsm)
+    const custoCampoCalculado = totalServicoAlq;
 
     // Excel C13: Net budget available for lab analyses (B9 - C12)
     const saldoAnalisesTotal = totalValue - custoCampoCalculado;
@@ -228,18 +232,10 @@ export class SoilSamplingService {
         ? (valorAnalisePorPontoFechado - valorTeoricoAnaliseUnit) / valorTeoricoAnaliseUnit
         : 0;
 
-    // Excel B17 / I25: % de Analises Completa via regressão cúbica
-    const poly =
-      148.15 * Math.pow(fatorDescontoAnalise, 3) +
-      55.556 * Math.pow(fatorDescontoAnalise, 2) +
-      249.07 * fatorDescontoAnalise +
-      100.06;
-
-    // Se não há desconto comercial (B9 >= B8), 100% das análises são completas e macro simples é 0
-    const percAnalisesCompleta =
-      desconto <= 0 || fatorDescontoAnalise >= 0
-        ? 100
-        : Math.max(0, Math.min(100, poly));
+    // In LucasRafael.xlsm (2026) / budget.xlsm:
+    // Without commercial discount (B9 >= B8), 100% of analyses are complete.
+    // With commercial discount, standard baseline is 40% Completa and 60% Macro Simples (B17 = 40 in LucasRafael.xlsm).
+    const percAnalisesCompleta = desconto <= 0 ? 100 : 40;
     const percAnalisesMacro = 100 - percAnalisesCompleta;
 
     // Excel B21 & B22: Number of Complete vs Macro analyses

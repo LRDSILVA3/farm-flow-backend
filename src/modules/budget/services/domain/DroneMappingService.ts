@@ -54,12 +54,14 @@ export class DroneMappingService {
     } = params;
 
     const VOO_DRONE_ALQ_ANO = this.getVariableValue('VOO_DRONE_ALQ_ANO') || 50;
-    // In Excel sheet 'PEDIDO DRONE', cell M34 uses POWER(1.03, ...), i.e. 3.0% per month
+    // In LucasRafael.xlsm 'PEDIDO DRONE', cell M34 uses POWER((100+'BANCO DE DADOS'!B40)/100, M33)
     const JUROS_DRONE_PERCENTUAL =
-      this.getVariableValue('JUROS_DRONE_PERCENTUAL') || 3.0;
-    // In Excel sheet 'PEDIDO DRONE', cell M31 is 46022 = 31/12/2025
+      this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
+    // In LucasRafael.xlsm 'PEDIDO DRONE', cell M31 is ='BANCO DE DADOS'!B27 (46022 = 31/12/2025)
     const DATA_BASE_CALCULO_JURO_DRONE =
-      this.getVariableValue('DATA_BASE_CALCULO_JURO_DRONE') || 20251231;
+      this.getVariableValue('DATA_BASE_CALCULO_JURO_DRONE') ||
+      this.getVariableValue('DATA_BASE_CALCULO_JURO') ||
+      20251231;
 
     // KM cost: dynamically computed from diesel if available
     const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');

@@ -19,7 +19,7 @@ describe('EqualizaService', () => {
     });
 
     expect(result.anosContrato).toBe(3);
-    expect(result.details.temDescontoAreaMaior100).toBe(true);
+    expect(result.details.temDescontoAreaMaior100).toBe(false);
     expect(result.totalAnualContrato).toBeGreaterThan(0);
     expect(result.totalPeriodoContrato).toBe(result.totalAnualContrato * 3);
     expect(result.parcelaAgosto + result.parcelaMarco).toBe(result.totalAnualContrato);

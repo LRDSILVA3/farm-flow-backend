@@ -6,6 +6,7 @@ export interface ConferenciaParams {
   vencimentoServico: string; // Expects DD/MM/YYYY format
   desejaAnaliseFisica: 'S' | 'N';
   percentualAnalises20_40cm: number;
+  percentualAnalisesBIOAS?: number; // % das Análises BIOAS (INPUT CONFERENCIA E8)
   alqueires: number;
   numAnalises: number;
   totalAlqueires: number;
@@ -28,6 +29,8 @@ export interface ConferenciaDetails {
   custoTalhaoCalculated: number;
   numAnalises20_40cm: number;
   custoAnalises20_40cm: number;
+  numAnalisesBIOAS: number;
+  custoAnalisesBIOAS: number;
   travelCost: number;
   valorKmCalculated: number;
   breakdown: {
@@ -37,6 +40,8 @@ export interface ConferenciaDetails {
     analiseMacroUnit: number;
     analise20_40Total: number;
     analise20_40Unit: number;
+    analiseBIOASTotal: number;
+    analiseBIOASUnit: number;
   };
 }
 
@@ -70,6 +75,7 @@ export class ConferenciaService {
       vencimentoServico,
       desejaAnaliseFisica,
       percentualAnalises20_40cm,
+      percentualAnalisesBIOAS,
       alqueires,
       numAnalises,
       totalAlqueires,
@@ -86,6 +92,11 @@ export class ConferenciaService {
       percDecimal = percDecimal / 100;
     }
 
+    let percBioasDecimal = percentualAnalisesBIOAS || 0;
+    if (percBioasDecimal > 1 && percBioasDecimal <= 100) {
+      percBioasDecimal = percBioasDecimal / 100;
+    }
+
     const VALOR_ALQ_CONFERENCIA = this.getVariableValue('VALOR_ALQ_CONFERENCIA') || 71.666667;
     const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111;
     const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
@@ -95,9 +106,9 @@ export class ConferenciaService {
     const VALOR_ANALISE_ADUBO_BASE = this.getVariableValue('VALOR_ANALISE_ADUBO_BASE') || 17.50;
     const VALOR_ANALISE_ENXOFRE = this.getVariableValue('VALOR_ANALISE_ENXOFRE') || 12.50;
     const VALOR_ANALISE_FISICA_UNITARIO = this.getVariableValue('VALOR_ANALISE_FISICA_UNITARIO') || 33.30;
+    const VALOR_LAB_BIOAS = this.getVariableValue('VALOR_LAB_BIOAS') || 205.20;
 
-    // KM cost: If VALOR_OLEO_DIESEL is configured, compute dynamically: (DIESEL / 7 * 4)
-    // Excel formula: BANCO DE DADOS!B12 = (B25 / 7 * 4)
+    // KM cost: In LucasRafael.xlsm, BANCO DE DADOS!B12 is (VALOR_OLEO_DIESEL / 7 * 4) = 4.785714
     const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
     let valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO');
     if (valorDiesel > 0) {
@@ -124,46 +135,63 @@ export class ConferenciaService {
         ? Math.pow(1 + JUROS_PAGAMENTO_PRAZO_PERCENTUAL / 100, daysDifference / 30)
         : 1;
 
-    // Travel cost calculation proportional to plot area:
-    // Excel: (B12 * E4 / B29) * B9
+    // Travel cost calculation proportional to plot area (ida e volta: E4 * 2):
+    // Excel: ('BANCO DE DADOS'!$B$12 * $E$4 * 2 / $B$30 * B10)
     let travelCost = 0;
     let costMethod1 = 0;
     let costMethod2 = 0;
     let selectedCostMethod = 0;
 
     if (alqueires > 0 && totalAlqueires > 0) {
-      const travelCostPerAlqueire = (valorKm * distanciaFazendaKm) / totalAlqueires;
+      const travelCostPerAlqueire = (valorKm * distanciaFazendaKm * 2) / totalAlqueires;
       travelCost = travelCostPerAlqueire * alqueires;
 
-      costMethod1 = alqueires * VALOR_ALQ_CONFERENCIA + travelCost;
-      costMethod2 = numAnalises * VALOR_PONTO_CONFERE_COMPACTACAO + travelCost;
+      costMethod1 = alqueires * VALOR_ALQ_CONFERENCIA;
+      costMethod2 = numAnalises * VALOR_PONTO_CONFERE_COMPACTACAO;
       selectedCostMethod = Math.max(costMethod1, costMethod2);
     }
 
-    const custoTalhaoCalculated = selectedCostMethod * jurosFactor;
+    const servicoComJuros = (selectedCostMethod + travelCost) * jurosFactor;
 
-    // Excel F30: IF(E7>0, IF(C29*E7<=1, 1, ROUND(E7*C29, 0)), 0) * ('INPUT DADOS'!C23 + 'BANCO DE DADOS'!B10)
-    // where C23 = ANALISE_20_40_CM_VALOR_ANALISE (70.00) and B10 = VALOR_ALQ_CONFERENCIA (65.00)
+    // Excel F6: Macro + S (+ Física se solicitada)
+    const sumMacro = VALOR_ANALISE_NOVA_AREA + VALOR_ANALISE_ADUBO_BASE + VALOR_ANALISE_ENXOFRE;
+    const custoAnaliseFisica = sumMacro + (desejaAnaliseFisica === 'S' ? VALOR_ANALISE_FISICA_UNITARIO : 0);
+    const analiseMacroTotal = numAnalises * custoAnaliseFisica;
+
+    // Excel F7: 20-40cm analyses
+    // IF(E7>0, IF(C30*E7<=1, 1, ROUND(E7*C30, 0)), 0) * 'INPUT DADOS'!C23
     let numAnalises20_40cm = 0;
     if (percDecimal > 0 && numAnalises > 0) {
       numAnalises20_40cm = numAnalises * percDecimal <= 1 ? 1 : Math.round(percDecimal * numAnalises);
     }
+    const analise20_40Total = numAnalises20_40cm * ANALISE_20_40_CM_VALOR_ANALISE;
 
+    // Excel F8: BIOAS Analyses
+    // IF(E8>0, IF(E8*C30<1, 1, ROUND(E8*C30, 0)), 0) * 'BANCO DE DADOS'!B48
+    let numAnalisesBIOAS = 0;
+    if (percBioasDecimal > 0 && numAnalises > 0) {
+      numAnalisesBIOAS = numAnalises * percBioasDecimal <= 1 ? 1 : Math.round(percBioasDecimal * numAnalises);
+    }
+    const analiseBIOASTotal = numAnalisesBIOAS * VALOR_LAB_BIOAS;
+    const custoAnalisesBIOAS = analiseBIOASTotal;
+
+    // Excel E10 (talhão em LucasRafael.xlsm):
+    // (selectedCostMethod + travelCost) * F5 + (numAnalises * F6) + F7 + F8
+    const custoTalhaoCalculated = servicoComJuros + analiseMacroTotal + analise20_40Total + analiseBIOASTotal;
+
+    // Excel F31: Linha adicional de 20-40cm somada no total E31
+    // IF(E7>0, IF(C30*E7<=1, 1, ROUND(E7*C30, 0)), 0) * ('INPUT DADOS'!C23 + 'BANCO DE DADOS'!B10)
     const custoAnalises20_40cm =
       numAnalises20_40cm * (ANALISE_20_40_CM_VALOR_ANALISE + VALOR_ALQ_CONFERENCIA);
 
-    // Total work value: Excel E30 = SUM(E9:E28) + F30
-    // Note: In Excel, "Nota Fiscal" does not add a tax percentage to Conferencia total.
+    // Total work value: Excel E31 = SUM(E10:E29) + F31
     const totalValue = custoTalhaoCalculated + custoAnalises20_40cm;
     const totalValuePerAlq = alqueires > 0 ? totalValue / alqueires : 0;
     const totalValuePerPoint = numAnalises > 0 ? totalValue / numAnalises : 0;
 
-    // Breakdown matching PEDIDO CONFERENCIA items:
-    const sumMacro = VALOR_ANALISE_NOVA_AREA + VALOR_ANALISE_ADUBO_BASE + VALOR_ANALISE_ENXOFRE;
-    const custoAnaliseFisica = sumMacro + (desejaAnaliseFisica === 'S' ? VALOR_ANALISE_FISICA_UNITARIO : 0);
-    const analiseMacroTotal = numAnalises * custoAnaliseFisica;
-    const analise20_40Total = numAnalises20_40cm * ANALISE_20_40_CM_VALOR_ANALISE;
-    const coletaServicoTotal = totalValue - analiseMacroTotal - analise20_40Total;
+    // Breakdown matching PEDIDO CONFERENCIA rows 40-44:
+    // Row 40: SERVIÇO DE COLETA DE ANÁLISE = E31 - J42 - J43 - J44
+    const coletaServicoTotal = totalValue - analiseMacroTotal - analise20_40Total - analiseBIOASTotal;
     const coletaServicoPerAlq = alqueires > 0 ? coletaServicoTotal / alqueires : 0;
 
     return {
@@ -179,6 +207,8 @@ export class ConferenciaService {
         custoTalhaoCalculated,
         numAnalises20_40cm,
         custoAnalises20_40cm,
+        numAnalisesBIOAS,
+        custoAnalisesBIOAS,
         travelCost,
         valorKmCalculated: valorKm,
         breakdown: {
@@ -188,6 +218,8 @@ export class ConferenciaService {
           analiseMacroUnit: custoAnaliseFisica,
           analise20_40Total,
           analise20_40Unit: ANALISE_20_40_CM_VALOR_ANALISE,
+          analiseBIOASTotal,
+          analiseBIOASUnit: VALOR_LAB_BIOAS,
         },
       },
     };

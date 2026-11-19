@@ -51,6 +51,7 @@ describe('Orders Service', () => {
     const data = {
       client_id: 'client-1',
       farm_id: 'farm-1',
+      area: 24.2,
       total_amount: 5000,
       status: 'pending',
     };
@@ -59,6 +60,24 @@ describe('Orders Service', () => {
     expect(result).toHaveProperty('id', 'order-1');
     expect(mockOrdersRepo.create).toHaveBeenCalledWith(data);
     expect(mockOrdersRepo.save).toHaveBeenCalled();
+  });
+
+  it('create should throw AppError if client_id is missing', async () => {
+    await expect(
+      service.create({
+        client_id: '',
+        area: 10,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('create should throw AppError if area is missing or <= 0', async () => {
+    await expect(
+      service.create({
+        client_id: 'client-1',
+        area: 0,
+      }),
+    ).rejects.toBeInstanceOf(AppError);
   });
 
   it('update should update existing order fields', async () => {

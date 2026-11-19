@@ -31,6 +31,11 @@ export default class ServicesController {
     return res.json(list);
   };
 
+  public show = async (req: Request, res: Response): Promise<Response> => {
+    const item = await this.manager.getService(req.params.id);
+    return res.json(item);
+  };
+
   public create = async (req: Request, res: Response): Promise<Response> => {
     const item = await this.manager.createService(req.body);
     await recordAudit({
@@ -61,6 +66,25 @@ export default class ServicesController {
       afterData: item,
     });
     return res.json(item);
+  };
+
+  public syncProducts = async (req: Request, res: Response): Promise<Response> => {
+    const { id } = req.params;
+    const { product_ids } = req.body;
+    await this.manager.syncServiceProducts(id, product_ids || []);
+    const updated = await this.manager.getService(id);
+
+    await recordAudit({
+      req,
+      module: 'services',
+      action: 'UPDATE',
+      entityId: id,
+      entityLabel: updated.name,
+      summary: `Produtos vinculados atualizados para o serviço: ${updated.name}`,
+      afterData: updated,
+    });
+
+    return res.json(updated);
   };
 
   public delete = async (req: Request, res: Response): Promise<Response> => {

@@ -58,7 +58,15 @@ describe('Products Services', () => {
     const result = await service.execute(data);
 
     expect(result).toHaveProperty('id', 'prod-1');
-    expect(mockRepo.create).toHaveBeenCalledWith(data);
+    expect(mockRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Defensivo A',
+        price: 150,
+        quantity: 50,
+        category: 'Outro',
+        unit: 'un',
+      })
+    );
     expect(mockRepo.save).toHaveBeenCalled();
   });
 

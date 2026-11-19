@@ -21,7 +21,7 @@ class ServiceExecution {
   product_name: string;
 
   @Column('numeric', { precision: 10, scale: 2, nullable: true })
-  quantity: number;
+  quantity?: number;
 
   @Column({ nullable: true })
   unit: string;

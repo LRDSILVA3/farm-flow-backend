@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import ServiceProduct from './ServiceProduct';
 
 @Entity('services')
 class Service {
@@ -28,6 +30,9 @@ class Service {
 
   @Column({ default: false })
   is_fixed: boolean;
+
+  @OneToMany(() => ServiceProduct, (sp) => sp.service)
+  service_products: ServiceProduct[];
 
   @CreateDateColumn()
   created_at: Date;

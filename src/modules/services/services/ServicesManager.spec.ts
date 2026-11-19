@@ -54,6 +54,7 @@ describe('Services Manager', () => {
     expect(result).toHaveLength(1);
     expect(mockServicesRepo.find).toHaveBeenCalledWith({
       order: { created_at: 'DESC' },
+      relations: ['service_products', 'service_products.product'],
     });
   });
 
@@ -64,6 +65,7 @@ describe('Services Manager', () => {
       unit_type: 'ha',
       default_price: 25.0,
     };
+    mockServicesRepo.findOne.mockResolvedValue({ id: 'srv-1', ...data });
 
     const result = await manager.createService(data);
     expect(result).toHaveProperty('id', 'srv-1');

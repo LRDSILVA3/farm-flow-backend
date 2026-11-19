@@ -96,9 +96,9 @@ export class EqualizaService {
       custoUnitarioFungoNema +
       custoUnitarioCompactacao;
 
-    // Excel I41: IF(B41 >= 100, SUM(I33:I37) * 0.95, SUM(I33:I37))
-    const temDescontoAreaMaior100 = totalAlqueires >= 100;
-    const precoPorAlqueireAnual = temDescontoAreaMaior100 ? somaUnitarios * 0.95 : somaUnitarios;
+    // In LucasRafael.xlsm (2026), EQUALIZA!I41 = IF(B41="","",SUM(I33:I37)) (no automatic 5% discount for >= 100 alq)
+    const temDescontoAreaMaior100 = false;
+    const precoPorAlqueireAnual = somaUnitarios;
 
     const subtotalAnual = precoPorAlqueireAnual * totalAlqueires;
     const totalAnualContrato = Math.max(0, subtotalAnual - descontoManual);

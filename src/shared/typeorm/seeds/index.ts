@@ -1,8 +1,13 @@
 import 'reflect-metadata';
-import { createConnection, getConnection } from 'typeorm';
+import { createConnection } from 'typeorm';
 import { hash } from 'bcryptjs';
 import CostVariable from '@modules/cost-variables/typeorm/entities/CostVariable';
 import Service from '@modules/services/typeorm/entities/Service';
+import ServiceProduct from '@modules/services/typeorm/entities/ServiceProduct';
+import Product from '@modules/products/typeorm/entities/Product';
+import Farm from '@modules/farms/typeorm/entities/Farm';
+import Plot from '@modules/farms/typeorm/entities/Plot';
+import Order from '@modules/orders/typeorm/entities/Order';
 import User from '@modules/user/typeorm/entities/User';
 
 const initialCostVariables = [
@@ -85,6 +90,161 @@ const initialServices = [
   { name: 'Equalização de Serviços', status: 'Ativo', is_fixed: true, value_per_alqueire: '0.00' },
 ];
 
+const initialProducts = [
+  {
+    name: 'Calcário Dolomítico',
+    code: 'CALC-DOL',
+    category: 'Corretivo',
+    unit: 'Ton',
+    cost_price: 110.00,
+    price: 175.00,
+    quantity: 450.00,
+    min_stock: 50.00,
+    supplier: 'Mineração Bela Vista',
+    status: 'Ativo',
+    description: 'Corretivo de solo com alto teor de Magnésio e Cálcio, indicado para correção de acidez.',
+  },
+  {
+    name: 'Calcário Calcítico',
+    code: 'CALC-CAL',
+    category: 'Corretivo',
+    unit: 'Ton',
+    cost_price: 120.00,
+    price: 185.00,
+    quantity: 380.00,
+    min_stock: 50.00,
+    supplier: 'Mineração Bela Vista',
+    status: 'Ativo',
+    description: 'Corretivo com predominância de Cálcio, ideal para solos deficientes em Cálcio.',
+  },
+  {
+    name: 'Gesso Agrícola',
+    code: 'GES-AGR',
+    category: 'Corretivo',
+    unit: 'Ton',
+    cost_price: 85.00,
+    price: 135.00,
+    quantity: 300.00,
+    min_stock: 40.00,
+    supplier: 'Fospar Fertilizantes',
+    status: 'Ativo',
+    description: 'Condicionador de subsolo, fornece Cálcio e Enxofre em profundidade.',
+  },
+  {
+    name: 'Cama de Frango',
+    code: 'CAM-FRA',
+    category: 'Corretivo',
+    unit: 'Ton',
+    cost_price: 75.00,
+    price: 120.00,
+    quantity: 200.00,
+    min_stock: 30.00,
+    supplier: 'Granja Esperança',
+    status: 'Ativo',
+    description: 'Matéria orgânica rica em nutrientes para enriquecimento biológico do solo.',
+  },
+  {
+    name: 'Pó de Rocha',
+    code: 'PO-ROC',
+    category: 'Corretivo',
+    unit: 'Ton',
+    cost_price: 65.00,
+    price: 105.00,
+    quantity: 180.00,
+    min_stock: 25.00,
+    supplier: 'Mineração Planalto',
+    status: 'Ativo',
+    description: 'Remineralizador de solo com liberação gradual de macro e micronutrientes.',
+  },
+  {
+    name: 'KCl (Cloreto de Potássio)',
+    code: 'FERT-KCL',
+    category: 'Fertilizante',
+    unit: 'Ton',
+    cost_price: 2750.00,
+    price: 3450.00,
+    quantity: 60.00,
+    min_stock: 10.00,
+    supplier: 'Mosaic Fertilizantes',
+    status: 'Ativo',
+    description: 'Fonte concentrada de Potássio (60% K2O) para adubação de base ou cobertura.',
+  },
+  {
+    name: 'Superfosfato Simples (SSP)',
+    code: 'FERT-SSP',
+    category: 'Fertilizante',
+    unit: 'Ton',
+    cost_price: 1550.00,
+    price: 2150.00,
+    quantity: 75.00,
+    min_stock: 15.00,
+    supplier: 'Yara Brasil',
+    status: 'Ativo',
+    description: 'Fonte de Fósforo, Cálcio e Enxofre solúvel para arranque radicular.',
+  },
+  {
+    name: 'Ureia Agrícola 46% N',
+    code: 'FERT-URE',
+    category: 'Fertilizante',
+    unit: 'Ton',
+    cost_price: 2250.00,
+    price: 2950.00,
+    quantity: 50.00,
+    min_stock: 10.00,
+    supplier: 'Fertipar',
+    status: 'Ativo',
+    description: 'Adubo nitrogenado de alta concentração para desenvolvimento vegetativo.',
+  },
+  {
+    name: 'Adjuvante Espalhante Adesivo',
+    code: 'ADJ-ESP',
+    category: 'Adjuvante',
+    unit: 'L',
+    cost_price: 42.00,
+    price: 78.00,
+    quantity: 150.00,
+    min_stock: 20.00,
+    supplier: 'AgroQuímica Sul',
+    status: 'Ativo',
+    description: 'Reduz tensão superficial da gota, melhorando a deposição na aplicação aérea/drone.',
+  },
+  {
+    name: 'Biológico Trichoderma Harzianum',
+    code: 'BIO-TRI',
+    category: 'Biológico',
+    unit: 'L',
+    cost_price: 85.00,
+    price: 165.00,
+    quantity: 90.00,
+    min_stock: 15.00,
+    supplier: 'BioAgro Soluções',
+    status: 'Ativo',
+    description: 'Inoculante biológico protetor contra fungos de solo e estimulante de enraizamento.',
+  },
+];
+
+const serviceProductLinks: { serviceName: string; productNames: string[] }[] = [
+  {
+    serviceName: 'Aplicação ATV',
+    productNames: [
+      'Calcário Dolomítico',
+      'Calcário Calcítico',
+      'Gesso Agrícola',
+      'Cama de Frango',
+      'Pó de Rocha',
+      'KCl (Cloreto de Potássio)',
+      'Superfosfato Simples (SSP)',
+    ],
+  },
+  {
+    serviceName: 'Pulverização Drone',
+    productNames: [
+      'Adjuvante Espalhante Adesivo',
+      'Biológico Trichoderma Harzianum',
+    ],
+  },
+];
+
 async function seed() {
   console.log('🌱 Starting Database Seeding...');
   const connection = await createConnection();
@@ -126,7 +286,89 @@ async function seed() {
     }
     console.log('✅ System Services seeded successfully.');
 
-    // 3. Seed Default Admin User
+    // 3. Seed Products
+    const productRepo = connection.getRepository(Product);
+    console.log(`🌾 Seeding ${initialProducts.length} Agricultural Products...`);
+    const savedProducts: Map<string, Product> = new Map();
+
+    for (const p of initialProducts) {
+      let existing = await productRepo.findOne({ where: { name: p.name } });
+      if (existing) {
+        Object.assign(existing, p);
+        await productRepo.save(existing);
+        savedProducts.set(existing.name, existing);
+      } else {
+        const created = productRepo.create(p);
+        await productRepo.save(created);
+        savedProducts.set(created.name, created);
+      }
+    }
+    console.log('✅ Agricultural Products seeded successfully.');
+
+    // 4. Link Products to Services
+    const spRepo = connection.getRepository(ServiceProduct);
+    console.log(`🔗 Linking Products to Services...`);
+    for (const link of serviceProductLinks) {
+      const service = await serviceRepo.findOne({ where: { name: link.serviceName } });
+      if (!service) continue;
+
+      // Clear existing links
+      await spRepo.delete({ service_id: service.id });
+
+      const newLinks: ServiceProduct[] = [];
+      const linkedNames: string[] = [];
+
+      for (const prodName of link.productNames) {
+        const product = savedProducts.get(prodName) || (await productRepo.findOne({ where: { name: prodName } }));
+        if (product) {
+          newLinks.push(
+            spRepo.create({
+              service_id: service.id,
+              product_id: product.id,
+              is_default: true,
+            })
+          );
+          linkedNames.push(product.name);
+        }
+      }
+
+      if (newLinks.length > 0) {
+        await spRepo.save(newLinks);
+        await serviceRepo.update(service.id, { products: linkedNames.join(', ') });
+        console.log(`  ✓ Linked ${newLinks.length} products to "${service.name}"`);
+      }
+    }
+    console.log('✅ Service-Product links established successfully.');
+
+    // 5. Seed Plots for Farms and synchronize orders
+    const farmRepo = connection.getRepository(Farm);
+    const plotRepo = connection.getRepository(Plot);
+    const orderRepo = connection.getRepository(Order);
+    const allFarms = await farmRepo.find();
+    for (const f of allFarms) {
+      let plots = await plotRepo.find({ where: { farm_id: f.id } });
+      if (plots.length === 0) {
+        const areaTotal = Number(f.area) || 24.2;
+        const h1 = Math.round((areaTotal / 2) * 100) / 100;
+        const h2 = Math.round((areaTotal - h1) * 100) / 100;
+        const p1 = plotRepo.create({ farm_id: f.id, name: 'Talhão 01 - Sede', area: h1, status: 'Ativo' });
+        const p2 = plotRepo.create({ farm_id: f.id, name: 'Talhão 02 - Pivô Central', area: h2, status: 'Ativo' });
+        plots = await plotRepo.save([p1, p2]);
+        console.log(`🌾 Plots seeded for farm "${f.name}":`, plots.map(p => p.name));
+      }
+
+      // Synchronize orders of this farm
+      const orders = await orderRepo.find({ where: { farm_id: f.id } });
+      for (const ord of orders) {
+        if (!ord.plots || ord.plots.length === 0) {
+          ord.plots = plots.map(p => ({ id: p.id, name: p.name, area: Number(p.area) }));
+          await orderRepo.save(ord);
+          console.log(`  ✓ Synced ${plots.length} plots into order ${ord.id}`);
+        }
+      }
+    }
+
+    // 6. Seed Default Admin User
     const userRepo = connection.getRepository(User);
     const adminEmail = 'admin@farmflow.com';
     let admin = await userRepo.findOne({ where: { email: adminEmail } });

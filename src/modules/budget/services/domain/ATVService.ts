@@ -140,7 +140,12 @@ export class ATVService {
 
     const itemResults: ATVItemResult[] = itens.map((item) => {
       const areaAlq = Math.round((item.areaHa / 2.42) * 100) / 100;
-      const isEsterco = item.produto === 'Cama de Frango' || item.produto === 'Pó de Rocha';
+      const isEsterco =
+        item.produto === 'Cama de Frango' ||
+        item.produto === 'Pó de Rocha' ||
+        item.produto.toLowerCase().includes('cama') ||
+        item.produto.toLowerCase().includes('rocha') ||
+        item.produto.toLowerCase().includes('esterco');
       const tonPorHa = item.areaHa > 0 ? item.toneladas / item.areaHa : 0;
 
       let precoBaseAlq = 0;

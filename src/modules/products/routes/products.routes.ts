@@ -8,6 +8,10 @@ const productsController = new ProductsController();
 
 productsRouter.use(ensureAuthenticated, ensureActiveUser);
 
+productsRouter.get('/summary', productsController.summary);
+productsRouter.get('/movements', productsController.listMovements);
+productsRouter.post('/:id/movements', ensurePermission('settings'), productsController.createMovement);
+
 productsRouter.get('/', productsController.index);
 productsRouter.get('/:id', productsController.show);
 productsRouter.post('/', ensurePermission('settings'), productsController.create);
