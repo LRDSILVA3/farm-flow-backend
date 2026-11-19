@@ -38,18 +38,26 @@ ordersRouter.post('/:id/executions', ensurePermission('orders', 'schedule'), asy
     operator_name: req.body.operator_name || req.body.operator || 'Operador',
     equipment_name: req.body.equipment_name || req.body.equipment || null,
     area_ha: req.body.area_ha || req.body.areaHa || 0,
+    product_name: req.body.product_name || req.body.product || null,
+    quantity: req.body.quantity !== undefined && req.body.quantity !== null ? Number(req.body.quantity) : null,
+    unit: req.body.unit || null,
+    plot_name: req.body.plot_name || req.body.plot || null,
+    samples_executed: req.body.samples_executed || req.body.samplesExecuted || 0,
+    splits: req.body.splits || [],
     execution_date: req.body.execution_date || req.body.date || new Date().toISOString().split('T')[0],
     notes: req.body.notes || null,
   });
   await repo.save(execution);
   const parentOrder = await safeFindSnapshot(Order, req.params.id);
+  const productInfo = execution.product_name ? ` - ${execution.quantity ? execution.quantity + ' ' + (execution.unit || '') + ' de ' : ''}${execution.product_name}` : '';
+  const plotInfo = execution.plot_name ? ` (${execution.plot_name})` : '';
   await recordAudit({
     req,
     module: 'orders',
     action: 'EXECUTION',
     entityId: req.params.id,
     entityLabel: buildOrderEntityLabel(parentOrder),
-    summary: `Execução de ${execution.area_ha} ha registrada (${execution.operator_name})`,
+    summary: `Execução de ${execution.area_ha} ha registrada (${execution.operator_name}${productInfo}${plotInfo})`,
     afterData: execution,
   });
   return res.status(201).json(execution);

@@ -68,8 +68,17 @@ class Order {
   @Column('jsonb', { nullable: true, default: () => "'[]'" })
   logs: any;
 
+  @Column('jsonb', { nullable: true, default: () => "'[]'" })
+  plots: any;
+
   @Column('decimal', { precision: 10, scale: 2, default: 0, nullable: true })
   executed_area: number;
+
+  @Column('integer', { default: 0, nullable: true })
+  executed_samples: number;
+
+  @Column('integer', { default: 0, nullable: true })
+  total_samples: number;
 
   @Column('decimal', { precision: 12, scale: 2, default: 0, nullable: true })
   paid_amount: number;
