@@ -71,13 +71,25 @@ describe('Orders Service', () => {
     ).rejects.toBeInstanceOf(AppError);
   });
 
-  it('create should throw AppError if area is missing or <= 0', async () => {
+  it('create should throw AppError if area is missing or <= 0 for non-product service', async () => {
     await expect(
       service.create({
         client_id: 'client-1',
         area: 0,
       }),
     ).rejects.toBeInstanceOf(AppError);
+  });
+
+  it('create should allow area 0 for product order (type=Produto)', async () => {
+    const data = {
+      client_id: 'client-1',
+      type: 'Produto',
+      service_name: 'Venda de Produtos',
+      area: 0,
+      value: 1600,
+    };
+    const result = await service.create(data);
+    expect(result).toHaveProperty('id', 'order-1');
   });
 
   it('update should update existing order fields', async () => {

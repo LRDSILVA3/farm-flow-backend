@@ -13,13 +13,17 @@ export class OrdersService {
     if (!data.client_id || data.client_id.trim() === '') {
       throw new AppError('O cliente é obrigatório para cadastrar o pedido.', 400);
     }
+    const isProductOrder = data.type === 'Produto' || data.service_name === 'Venda de Produtos';
     const numArea = Number(data.area || 0);
-    if (!numArea || numArea <= 0) {
+    if (!isProductOrder && (!numArea || numArea <= 0)) {
       throw new AppError('A área deve ser informada e maior que zero.', 400);
     }
 
     const repo = getCustomRepository(OrdersRepository);
-    const order = repo.create(data);
+    const order = repo.create({
+      ...data,
+      area: isProductOrder ? (numArea || 0) : numArea,
+    });
     await repo.save(order);
     return order;
   }
