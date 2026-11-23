@@ -69,6 +69,10 @@ export class ConferenciaService {
     return value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: ConferenciaParams): ConferenciaCalculationResult {
     let {
       distanciaFazendaKm,
@@ -97,24 +101,27 @@ export class ConferenciaService {
       percBioasDecimal = percBioasDecimal / 100;
     }
 
-    const VALOR_ALQ_CONFERENCIA = this.getVariableValue('VALOR_ALQ_CONFERENCIA') || 71.666667;
-    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
-    const ANALISE_20_40_CM_VALOR_ANALISE = this.getVariableValue('ANALISE_20_40_CM_VALOR_ANALISE') || 73.90;
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
-    const VALOR_ANALISE_NOVA_AREA = this.getVariableValue('VALOR_ANALISE_NOVA_AREA') || 61.40;
-    const VALOR_ANALISE_ADUBO_BASE = this.getVariableValue('VALOR_ANALISE_ADUBO_BASE') || 17.50;
-    const VALOR_ANALISE_ENXOFRE = this.getVariableValue('VALOR_ANALISE_ENXOFRE') || 12.50;
-    const VALOR_ANALISE_FISICA_UNITARIO = this.getVariableValue('VALOR_ANALISE_FISICA_UNITARIO') || 33.30;
-    const VALOR_LAB_BIOAS = this.getVariableValue('VALOR_LAB_BIOAS') || 205.20;
+    const VALOR_ALQ_CONFERENCIA = this.getVar('VALOR_ALQ_CONFERENCIA', 71.666667);
+    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVar('VALOR_PONTO_CONFERE_COMPACTACAO', 361.111111);
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVar('JUROS_PAGAMENTO_PRAZO_PERCENTUAL', 1.2);
+    const ANALISE_20_40_CM_VALOR_ANALISE = this.getVar('ANALISE_20_40_CM_VALOR_ANALISE', 73.90);
+    const DATA_BASE_CALCULO_JURO = this.getVar('DATA_BASE_CALCULO_JURO', 20251231);
+    const VALOR_ANALISE_NOVA_AREA = this.getVar('VALOR_ANALISE_NOVA_AREA', 61.40);
+    const VALOR_ANALISE_ADUBO_BASE = this.getVar('VALOR_ANALISE_ADUBO_BASE', 17.50);
+    const VALOR_ANALISE_ENXOFRE = this.getVar('VALOR_ANALISE_ENXOFRE', 12.50);
+    const VALOR_ANALISE_FISICA_UNITARIO = this.getVar('VALOR_ANALISE_FISICA_UNITARIO', 33.30);
+    const VALOR_LAB_BIOAS = this.getVar('VALOR_LAB_BIOAS', 205.20);
 
-    // KM cost: In LucasRafael.xlsm, BANCO DE DADOS!B12 is (VALOR_OLEO_DIESEL / 7 * 4) = 4.785714
-    const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
-    let valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO');
-    if (valorDiesel > 0) {
-      valorKm = (valorDiesel / 7) * 4;
-    } else if (valorKm === 0) {
-      valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA') || 4.785714;
+    // KM cost: reads VALOR_KM_CONFERENCIA_FOLHA directly if configured; falls back to diesel formula only if missing
+    let valorKm: number;
+    if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA')!;
+    } else if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')!;
+    } else if (this.getVariableValue('VALOR_OLEO_DIESEL') > 0) {
+      valorKm = (this.getVariableValue('VALOR_OLEO_DIESEL') / 7) * 4;
+    } else {
+      valorKm = 4.785714;
     }
 
     // Parse service expiration date

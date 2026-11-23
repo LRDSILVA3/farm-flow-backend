@@ -121,9 +121,12 @@ describe('ConferenciaService', () => {
     expect(result.details.breakdown.analiseMacroTotal).toBeCloseTo(1476.00, 2);
   });
 
-  it('should derive valorKm dynamically when VALOR_OLEO_DIESEL is provided', () => {
+  it('should derive valorKm dynamically when VALOR_OLEO_DIESEL is provided and KM override is not set', () => {
+    const varsWithoutKm = mockCostVariables.filter(
+      (v) => v.code !== 'VALOR_KM_CONFERENCIA_FOLHA' && v.code !== 'VALOR_KM_CONFERENCIA_FOLHA_CALCULADO',
+    );
     const variablesWithDiesel: CostVariable[] = [
-      ...mockCostVariables,
+      ...varsWithoutKm,
       { id: '11', name: 'Valor Oleo Diesel', code: 'VALOR_OLEO_DIESEL', value: 6.9411764705882355, description: '' },
     ];
 
@@ -143,14 +146,17 @@ describe('ConferenciaService', () => {
     expect(result.details.valorKmCalculated).toBeCloseTo((6.9411764705882355 / 7) * 4, 4);
   });
 
-  it('should recalculate when diesel price increases', () => {
+  it('should recalculate when diesel price increases (without direct KM override) and respect direct KM edit', () => {
+    const varsWithoutKm = mockCostVariables.filter(
+      (v) => v.code !== 'VALOR_KM_CONFERENCIA_FOLHA' && v.code !== 'VALOR_KM_CONFERENCIA_FOLHA_CALCULADO',
+    );
     const originalService = new ConferenciaService([
-      ...mockCostVariables,
+      ...varsWithoutKm,
       { id: '11', name: 'Valor Oleo Diesel', code: 'VALOR_OLEO_DIESEL', value: 6.94, description: '' },
     ]);
 
     const higherDieselService = new ConferenciaService([
-      ...mockCostVariables,
+      ...varsWithoutKm,
       { id: '11', name: 'Valor Oleo Diesel', code: 'VALOR_OLEO_DIESEL', value: 8.50, description: '' },
     ]);
 
@@ -179,6 +185,24 @@ describe('ConferenciaService', () => {
     expect(resHigher.details.valorKmCalculated).toBeGreaterThan(resOriginal.details.valorKmCalculated);
     expect(resHigher.details.travelCost).toBeGreaterThan(resOriginal.details.travelCost);
     expect(resHigher.totalValue).toBeGreaterThan(resOriginal.totalValue);
+
+    // Direct KM override must be respected even when VALOR_OLEO_DIESEL is present
+    const directKmService = new ConferenciaService([
+      ...varsWithoutKm,
+      { id: '11', name: 'Valor Oleo Diesel', code: 'VALOR_OLEO_DIESEL', value: 6.94, description: '' },
+      { id: '12', name: 'Valor KM', code: 'VALOR_KM_CONFERENCIA_FOLHA', value: 6.50, description: '' },
+    ]);
+    const resDirectKm = directKmService.calculate({
+      clienteDesejaNotaFiscal: 'S',
+      distanciaFazendaKm: 50,
+      vencimentoServico: '30/03/2026',
+      desejaAnaliseFisica: 'N',
+      percentualAnalises20_40cm: 10,
+      alqueires: 10,
+      numAnalises: 10,
+      totalAlqueires: 10,
+    });
+    expect(resDirectKm.details.valorKmCalculated).toBe(6.50);
   });
 
   it('should use 2026 defaults when initialized without variables', () => {

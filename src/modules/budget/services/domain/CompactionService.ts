@@ -37,20 +37,27 @@ export class CompactionService {
     return value === undefined ? 0 : value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: CompactionParams): CompactionCalculationResult {
     const { numPontos, distanciaKm, vencimentoServico, desconto = 0 } = params;
 
-    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
+    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVar('VALOR_PONTO_CONFERE_COMPACTACAO', 361.111111);
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVar('JUROS_PAGAMENTO_PRAZO_PERCENTUAL', 1.2);
+    const DATA_BASE_CALCULO_JURO = this.getVar('DATA_BASE_CALCULO_JURO', 20251231);
 
-    // KM cost: dynamically computed from diesel if available
-    const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
-    let valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO');
-    if (valorDiesel > 0) {
-      valorKm = (valorDiesel / 7) * 4;
-    } else if (valorKm === 0) {
-      valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA') || 4.785714;
+    // KM cost: reads VALOR_KM_CONFERENCIA_FOLHA directly if configured; falls back to diesel formula only if missing
+    let valorKm: number;
+    if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA')!;
+    } else if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')!;
+    } else if (this.getVariableValue('VALOR_OLEO_DIESEL') > 0) {
+      valorKm = (this.getVariableValue('VALOR_OLEO_DIESEL') / 7) * 4;
+    } else {
+      valorKm = 4.785714;
     }
 
     // Parse dates

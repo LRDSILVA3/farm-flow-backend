@@ -391,22 +391,27 @@ async function seed() {
       }
     }
 
-    // 6. Seed Default Admin User
+    // 6. Seed Default Admin Users
     const userRepo = connection.getRepository(User);
-    const adminEmail = 'admin@farmflow.com';
-    let admin = await userRepo.findOne({ where: { email: adminEmail } });
-    if (!admin) {
-      const hashedPassword = await hash('admin123', 8);
-      admin = userRepo.create({
-        name: 'Administrador FarmFlow',
-        email: adminEmail,
-        password: hashedPassword,
-        role: 'admin',
-      });
-      await userRepo.save(admin);
-      console.log('👤 Admin user created: admin@farmflow.com / admin123');
-    } else {
-      console.log('👤 Admin user already exists: admin@farmflow.com');
+    const adminEmails = [
+      { email: 'admin@farmflow.com', name: 'Administrador FarmFlow' },
+      { email: 'admin@preciza.com.br', name: 'Administrador Preciza' },
+    ];
+    for (const adminUser of adminEmails) {
+      let admin = await userRepo.findOne({ where: { email: adminUser.email } });
+      if (!admin) {
+        const hashedPassword = await hash('admin123', 8);
+        admin = userRepo.create({
+          name: adminUser.name,
+          email: adminUser.email,
+          password: hashedPassword,
+          role: 'admin',
+        });
+        await userRepo.save(admin);
+        console.log(`👤 Admin user created: ${adminUser.email} / admin123`);
+      } else {
+        console.log(`👤 Admin user already exists: ${adminUser.email}`);
+      }
     }
 
     console.log('🎉 Seeding finished successfully!');

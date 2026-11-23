@@ -48,6 +48,10 @@ export class DroneSprayingService {
     return value === undefined ? 0 : value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: DroneSprayingParams): DroneSprayingCalculationResult {
     const {
       areaHa,
@@ -64,22 +68,26 @@ export class DroneSprayingService {
       vencimentoServico,
     } = params;
 
-    const DRONE_PULVE_BASE_ALQ = this.getVariableValue('DRONE_PULVE_BASE_ALQ') || 240;
-    const DRONE_PULVE_PRECO_MINIMO_ALQ = this.getVariableValue('DRONE_PULVE_PRECO_MINIMO_ALQ') || 270;
-    const DRONE_PULVE_PRECO_PROGRAMADA = this.getVariableValue('DRONE_PULVE_PRECO_PROGRAMADA') || 240;
-    const DRONE_VALOR_OBSTACULO = this.getVariableValue('DRONE_VALOR_OBSTACULO') || 100;
-    const DRONE_VALOR_BEIRA_MATO = this.getVariableValue('DRONE_VALOR_BEIRA_MATO') || 0.50;
-    const DRONE_VALOR_FIO_LUZ = this.getVariableValue('DRONE_VALOR_FIO_LUZ') || 1.00;
-    const DRONE_VALOR_PONTO_RTK = this.getVariableValue('DRONE_VALOR_PONTO_RTK') || 500;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
+    const DRONE_PULVE_BASE_ALQ = this.getVar('DRONE_PULVE_BASE_ALQ', 240);
+    const DRONE_PULVE_PRECO_MINIMO_ALQ = this.getVar('DRONE_PULVE_PRECO_MINIMO_ALQ', 270);
+    const DRONE_PULVE_PRECO_PROGRAMADA = this.getVar('DRONE_PULVE_PRECO_PROGRAMADA', 240);
+    const DRONE_VALOR_OBSTACULO = this.getVar('DRONE_VALOR_OBSTACULO', 100);
+    const DRONE_VALOR_BEIRA_MATO = this.getVar('DRONE_VALOR_BEIRA_MATO', 0.50);
+    const DRONE_VALOR_FIO_LUZ = this.getVar('DRONE_VALOR_FIO_LUZ', 1.00);
+    const DRONE_VALOR_PONTO_RTK = this.getVar('DRONE_VALOR_PONTO_RTK', 500);
+    const DRONE_LIMITE_DOSE_SOLIDO_KG_ALQ = this.getVar('DRONE_LIMITE_DOSE_SOLIDO_KG_ALQ', 100);
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVar('JUROS_PAGAMENTO_PRAZO_PERCENTUAL', 1.2);
 
-    // KM cost: dynamically computed from diesel if available
-    const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
-    let valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO');
-    if (valorDiesel > 0) {
-      valorKm = (valorDiesel / 7) * 4;
-    } else if (valorKm === 0) {
-      valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA') || 4.785714;
+    // KM cost: reads VALOR_KM_CONFERENCIA_FOLHA directly if configured; falls back to diesel formula only if missing
+    let valorKm: number;
+    if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA')!;
+    } else if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')!;
+    } else if (this.getVariableValue('VALOR_OLEO_DIESEL') > 0) {
+      valorKm = (this.getVariableValue('VALOR_OLEO_DIESEL') / 7) * 4;
+    } else {
+      valorKm = 4.785714;
     }
 
     const areaAlqueires = areaHa > 0 ? areaHa / 2.42 : 0;
@@ -120,10 +128,10 @@ export class DroneSprayingService {
       }
     }
 
-    // Excel B25: Corrigindo valor pela dose de solido
+    // Excel B25: Corrigindo valor pela dose de solido (BANCO DE DADOS!B41)
     let fatorDoseSolido = 1;
     if (tipoSolidoOuLiquido === 'S') {
-      if (doseSolidoKgAlq > 100) {
+      if (doseSolidoKgAlq > DRONE_LIMITE_DOSE_SOLIDO_KG_ALQ) {
         fatorDoseSolido = 0.0055 * doseSolidoKgAlq + 0.45;
       }
     }
@@ -153,11 +161,11 @@ export class DroneSprayingService {
         : 1;
 
     // Excel B27: Fator de correção pra sólido (0.9 se sólido, BANCO DE DADOS!B38)
-    const DRONE_FATOR_SOLIDO = this.getVariableValue('DRONE_FATOR_SOLIDO') || 0.9;
+    const DRONE_FATOR_SOLIDO = this.getVar('DRONE_FATOR_SOLIDO', 0.9);
     const fatorSolidoBase = tipoSolidoOuLiquido === 'S' ? DRONE_FATOR_SOLIDO : 1;
 
     // Excel B28: Correção imposto (0.93 se sem NF)
-    const FATOR_SEM_NOTA_FISCAL = this.getVariableValue('FATOR_SEM_NOTA_FISCAL') || 0.93;
+    const FATOR_SEM_NOTA_FISCAL = this.getVar('FATOR_SEM_NOTA_FISCAL', 0.93);
     const fatorImposto = comNotaFiscal ? 1 : FATOR_SEM_NOTA_FISCAL;
 
     // Excel B30: R$/Alq final

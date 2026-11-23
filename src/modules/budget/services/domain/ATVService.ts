@@ -76,6 +76,10 @@ export class ATVService {
     return value === undefined ? 0 : value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: ATVParams): ATVCalculationResult {
     const {
       distanciaIdaKm = 0,
@@ -90,33 +94,36 @@ export class ATVService {
       itens = [],
     } = params;
 
-    const ATV_1_PRODUTO = this.getVariableValue('ATV_1_PRODUTO') || 315;
-    const ATV_2_PRODUTOS = this.getVariableValue('ATV_2_PRODUTOS') || 310;
-    const ATV_3_PRODUTOS = this.getVariableValue('ATV_3_PRODUTOS') || 300;
-    const VALOR_APLICACAO_ESTERCO = this.getVariableValue('VALOR_APLICACAO_ESTERCO') || 45.00;
-    const DIARIA_PA_CARREGADEIRA = this.getVariableValue('DIARIA_PA_CARREGADEIRA') || 2400;
-    const VALOR_KM_PRANCHA = this.getVariableValue('VALOR_KM_DESLOCAMENTO_PRANCHA') || 13;
-    const VALOR_KM_DESLOCAMENTO_VAZIO = this.getVariableValue('VALOR_KM_DESLOCAMENTO_VAZIO') || 7.39;
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
-    const ATV_DESCONTO_SEM_NF_PERCENTUAL = this.getVariableValue('ATV_DESCONTO_SEM_NF_PERCENTUAL') || 4.0;
-    const ATV_CAPACIDADE_CAMINHAO_ESTERCO = this.getVariableValue('ATV_CAPACIDADE_CAMINHAO_ESTERCO') || 8.5;
-    const ATV_CAPACIDADE_CAMINHAO_PADRAO = this.getVariableValue('ATV_CAPACIDADE_CAMINHAO_PADRAO') || 13.0;
-    const ATV_RENDIMENTO_ESTERCO_DIA = this.getVariableValue('ATV_RENDIMENTO_ESTERCO_DIA') || 200;
-    const ATV_RENDIMENTO_PADRAO_DIA = this.getVariableValue('ATV_RENDIMENTO_PADRAO_DIA') || 28;
+    const ATV_1_PRODUTO = this.getVar('ATV_1_PRODUTO', 315);
+    const ATV_2_PRODUTOS = this.getVar('ATV_2_PRODUTOS', 310);
+    const ATV_3_PRODUTOS = this.getVar('ATV_3_PRODUTOS', 300);
+    const VALOR_APLICACAO_ESTERCO = this.getVar('VALOR_APLICACAO_ESTERCO', 45.00);
+    const DIARIA_PA_CARREGADEIRA = this.getVar('DIARIA_PA_CARREGADEIRA', 2400);
+    const VALOR_KM_PRANCHA = this.getVar('VALOR_KM_DESLOCAMENTO_PRANCHA', 13);
+    const VALOR_KM_DESLOCAMENTO_VAZIO = this.getVar('VALOR_KM_DESLOCAMENTO_VAZIO', 7.39);
+    const DATA_BASE_CALCULO_JURO = this.getVar('DATA_BASE_CALCULO_JURO', 20251231);
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVar('JUROS_PAGAMENTO_PRAZO_PERCENTUAL', 1.2);
+    const ATV_DESCONTO_SEM_NF_PERCENTUAL = this.getVar('ATV_DESCONTO_SEM_NF_PERCENTUAL', 4.0);
+    const ATV_CAPACIDADE_CAMINHAO_ESTERCO = this.getVar('ATV_CAPACIDADE_CAMINHAO_ESTERCO', 8.5);
+    const ATV_CAPACIDADE_CAMINHAO_PADRAO = this.getVar('ATV_CAPACIDADE_CAMINHAO_PADRAO', 13.0);
+    const ATV_RENDIMENTO_ESTERCO_DIA = this.getVar('ATV_RENDIMENTO_ESTERCO_DIA', 200);
+    const ATV_RENDIMENTO_PADRAO_DIA = this.getVar('ATV_RENDIMENTO_PADRAO_DIA', 28);
+    const ATV_LIMITE_DESLOCAMENTO_VAZIO_PERCENTUAL = this.getVar('ATV_LIMITE_DESLOCAMENTO_VAZIO_PERCENTUAL', 20.0);
+    const ATV_LIMITE_TON_HA_DOSE_ALTA = this.getVar('ATV_LIMITE_TON_HA_DOSE_ALTA', 5.5);
+    const ATV_FATOR_DOSE_ALTA = this.getVar('ATV_FATOR_DOSE_ALTA', 0.75);
 
-    // Fuel derived values
+    // Reads VALOR_KM_FRETE and DESPESA_VIAGEM_ATV directly if configured; falls back to diesel formula only if missing
     const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
-    let valorKmFrete = this.getVariableValue('VALOR_KM_FRETE') || 17.82;
-    let despesaViagem = this.getVariableValue('DESPESA_VIAGEM_ATV') || 251.25;
-
-    if (valorDiesel > 0) {
-      valorKmFrete = Math.round(((valorDiesel / 1 * 2) / 0.94) * 100) / 100;
-      despesaViagem = 5 * 2 * 3 * valorDiesel;
-    } else {
-      if (!valorKmFrete || valorKmFrete === 0) valorKmFrete = 14.77;
-      if (!despesaViagem || despesaViagem === 0) despesaViagem = 208.24;
-    }
+    const valorKmFrete = this.costVariables.has('VALOR_KM_FRETE')
+      ? this.costVariables.get('VALOR_KM_FRETE')!
+      : valorDiesel > 0
+      ? Math.round(((valorDiesel / 1 * 2) / 0.94) * 100) / 100
+      : 17.82;
+    const despesaViagem = this.costVariables.has('DESPESA_VIAGEM_ATV')
+      ? this.costVariables.get('DESPESA_VIAGEM_ATV')!
+      : valorDiesel > 0
+      ? 5 * 2 * 3 * valorDiesel
+      : 251.25;
 
     // Juros
     let jurosFactor = 1;
@@ -156,8 +163,8 @@ export class ATVService {
       let precoBaseAlq = 0;
       if (isEsterco) {
         precoBaseAlq = VALOR_APLICACAO_ESTERCO;
-      } else if (tonPorHa >= 5.5) {
-        precoBaseAlq = VALOR_APLICACAO_ESTERCO * 0.75;
+      } else if (tonPorHa >= ATV_LIMITE_TON_HA_DOSE_ALTA) {
+        precoBaseAlq = VALOR_APLICACAO_ESTERCO * ATV_FATOR_DOSE_ALTA;
       } else if (quantosProdutos === 1) {
         precoBaseAlq = ATV_1_PRODUTO;
       } else if (quantosProdutos >= 3) {
@@ -173,7 +180,7 @@ export class ATVService {
         if (isEsterco) {
           const valorMinimo = ATV_3_PRODUTOS * areaAlq * jurosFactor;
           investimentoATV = Math.max(valorMinimo, item.toneladas * precoCorrigido);
-        } else if (tonPorHa >= 5.5) {
+        } else if (tonPorHa >= ATV_LIMITE_TON_HA_DOSE_ALTA) {
           investimentoATV = precoCorrigido * item.toneladas;
         } else {
           investimentoATV = precoCorrigido * areaAlq;
@@ -227,10 +234,11 @@ export class ATVService {
     // Carregamento + Frete Pá Carregadeira (Excel Q21)
     let custoCarregamento = 0;
     if (carregamentoNecessario) {
+      const fatorDescontoNF = 1 - ATV_DESCONTO_SEM_NF_PERCENTUAL / 100;
       let fatorAjuste = 1;
-      if (comNotaFiscal && mapaPreciza) fatorAjuste = 0.96;
-      else if (!comNotaFiscal && mapaPreciza) fatorAjuste = 0.96 * 0.96;
-      else if (!comNotaFiscal && !mapaPreciza) fatorAjuste = 0.96;
+      if (comNotaFiscal && mapaPreciza) fatorAjuste = fatorDescontoNF;
+      else if (!comNotaFiscal && mapaPreciza) fatorAjuste = fatorDescontoNF * fatorDescontoNF;
+      else if (!comNotaFiscal && !mapaPreciza) fatorAjuste = fatorDescontoNF;
       else fatorAjuste = 1.0;
 
       const custoPa = fatorAjuste * DIARIA_PA_CARREGADEIRA * diasServico;
@@ -243,7 +251,7 @@ export class ATVService {
     const baseServicoFrete = subtotalATV + subtotalFrete;
     if (distanciaIdaKm > 0 && baseServicoFrete > 0) {
       const custoDeslocVazio = distanciaIdaKm * 2 * quantosCaminhoes * VALOR_KM_DESLOCAMENTO_VAZIO;
-      if (custoDeslocVazio / baseServicoFrete > 0.20) {
+      if (custoDeslocVazio / baseServicoFrete > ATV_LIMITE_DESLOCAMENTO_VAZIO_PERCENTUAL / 100) {
         adicionalDeslocamento = custoDeslocVazio;
       }
     }

@@ -42,6 +42,12 @@ class Plot {
   @Column({ nullable: true })
   lot: string;
 
+  @Column({ nullable: true })
+  responsible_name: string;
+
+  @Column({ nullable: true })
+  responsible_cpf: string;
+
   @CreateDateColumn()
   created_at: Date;
 

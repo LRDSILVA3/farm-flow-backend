@@ -19,6 +19,8 @@ const FARM_AUDIT_FIELDS = {
   status: 'Status',
   registration: 'Matrícula',
   lot: 'Lote',
+  responsible_name: 'Nome do Responsável',
+  responsible_cpf: 'CPF do Responsável',
 };
 
 const PLOT_AUDIT_FIELDS = {
@@ -29,6 +31,8 @@ const PLOT_AUDIT_FIELDS = {
   status: 'Status',
   registration: 'Matrícula',
   lot: 'Lote',
+  responsible_name: 'Nome do Responsável',
+  responsible_cpf: 'CPF do Responsável',
 };
 
 export default class FarmsController {

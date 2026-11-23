@@ -63,6 +63,10 @@ export class SoilSamplingService {
     return value === undefined ? 0 : value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: SoilSamplingParams): SoilSamplingCalculationResult {
     const {
       isReanalise,
@@ -80,25 +84,25 @@ export class SoilSamplingService {
       valorFechadoManual,
     } = params;
 
-    const AP_ATE_50_ALQ = this.getVariableValue('AP_ATE_50_ALQ') || 345.124551;
-    const AP_50_A_100_ALQ = this.getVariableValue('AP_50_A_100_ALQ') || 325.589199;
-    const AP_MAIS_100_ALQ = this.getVariableValue('AP_MAIS_100_ALQ') || 307.159622;
+    const AP_ATE_50_ALQ = this.getVar('AP_ATE_50_ALQ', 345.124551);
+    const AP_50_A_100_ALQ = this.getVar('AP_50_A_100_ALQ', 325.589199);
+    const AP_MAIS_100_ALQ = this.getVar('AP_MAIS_100_ALQ', 307.159622);
 
-    const REANALISE_ATE_50_ALQ = this.getVariableValue('REANALISE_ATE_50_ALQ') || 330.124551;
-    const REANALISE_50_A_100_ALQ = this.getVariableValue('REANALISE_50_A_100_ALQ') || 311.438256;
-    const REANALISE_MAIS_100_ALQ = this.getVariableValue('REANALISE_MAIS_100_ALQ') || 293.809675;
+    const REANALISE_ATE_50_ALQ = this.getVar('REANALISE_ATE_50_ALQ', 330.124551);
+    const REANALISE_50_A_100_ALQ = this.getVar('REANALISE_50_A_100_ALQ', 311.438256);
+    const REANALISE_MAIS_100_ALQ = this.getVar('REANALISE_MAIS_100_ALQ', 293.809675);
 
-    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111;
-    const VALOR_ANALISE_NOVA_AREA = this.getVariableValue('VALOR_ANALISE_NOVA_AREA') || 61.40;
-    const VALOR_ANALISE_ADUBO_BASE = this.getVariableValue('VALOR_ANALISE_ADUBO_BASE') || 17.50;
-    const VALOR_ANALISE_ENXOFRE = this.getVariableValue('VALOR_ANALISE_ENXOFRE') || 12.50;
-    const VALOR_ANALISE_MICRONUTRIENTES = this.getVariableValue('VALOR_ANALISE_MICRONUTRIENTES') || 29.55;
-    const ANALISE_20_40_CM_VALOR_ANALISE = this.getVariableValue('ANALISE_20_40_CM_VALOR_ANALISE') || 73.90;
-    const VALOR_ANALISE_FISICA_UNITARIO = this.getVariableValue('VALOR_ANALISE_FISICA_UNITARIO') || 33.30;
+    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVar('VALOR_PONTO_CONFERE_COMPACTACAO', 361.111111);
+    const VALOR_ANALISE_NOVA_AREA = this.getVar('VALOR_ANALISE_NOVA_AREA', 61.40);
+    const VALOR_ANALISE_ADUBO_BASE = this.getVar('VALOR_ANALISE_ADUBO_BASE', 17.50);
+    const VALOR_ANALISE_ENXOFRE = this.getVar('VALOR_ANALISE_ENXOFRE', 12.50);
+    const VALOR_ANALISE_MICRONUTRIENTES = this.getVar('VALOR_ANALISE_MICRONUTRIENTES', 29.55);
+    const ANALISE_20_40_CM_VALOR_ANALISE = this.getVar('ANALISE_20_40_CM_VALOR_ANALISE', 73.90);
+    const VALOR_ANALISE_FISICA_UNITARIO = this.getVar('VALOR_ANALISE_FISICA_UNITARIO', 33.30);
 
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
-    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVariableValue('JUROS_PAGAMENTO_PRAZO_PERCENTUAL') || 1.2;
-    const DESCONTO_SEM_FORMULA_ADUBO = this.getVariableValue('DESCONTO_SEM_FORMULA_ADUBO') || 0.8;
+    const DATA_BASE_CALCULO_JURO = this.getVar('DATA_BASE_CALCULO_JURO', 20251231);
+    const JUROS_PAGAMENTO_PRAZO_PERCENTUAL = this.getVar('JUROS_PAGAMENTO_PRAZO_PERCENTUAL', 1.2);
+    const DESCONTO_SEM_FORMULA_ADUBO = this.getVar('DESCONTO_SEM_FORMULA_ADUBO', 0.8);
 
     // Minimum number of analyses: Excel INPUT DADOS B15
     let numMinimoAnalises = 0;
@@ -143,7 +147,7 @@ export class SoilSamplingService {
       else basePricePerAlq = REANALISE_50_A_100_ALQ;
     }
 
-    const FATOR_SEM_NOTA_FISCAL = this.getVariableValue('FATOR_SEM_NOTA_FISCAL') || 0.93;
+    const FATOR_SEM_NOTA_FISCAL = this.getVar('FATOR_SEM_NOTA_FISCAL', 0.93);
     if (!comNotaFiscal) {
       basePricePerAlq *= FATOR_SEM_NOTA_FISCAL;
     }
@@ -237,7 +241,7 @@ export class SoilSamplingService {
     // Without commercial discount (B9 >= B8), 100% of analyses are complete.
     // With commercial discount, standard baseline is 40% Completa and 60% Macro Simples (B17 = 40 in LucasRafael.xlsm).
     const PERC_COMPLETA_COM_DESCONTO_PADRAO =
-      this.getVariableValue('PERC_COMPLETA_COM_DESCONTO_PADRAO') || 40;
+      this.getVar('PERC_COMPLETA_COM_DESCONTO_PADRAO', 40);
     const percAnalisesCompleta = desconto <= 0 ? 100 : PERC_COMPLETA_COM_DESCONTO_PADRAO;
     const percAnalisesMacro = 100 - percAnalisesCompleta;
 

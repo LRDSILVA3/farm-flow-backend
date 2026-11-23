@@ -43,6 +43,10 @@ export class EqualizaService {
     return value === undefined ? 0 : value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: EqualizaParams): EqualizaCalculationResult {
     const {
       totalAlqueires,
@@ -60,19 +64,20 @@ export class EqualizaService {
     const percentualAnualConf = Math.max(0, 1 - percentualAnualAP);
 
     // Annual inflation / escalation factor: (1 + (escalonamentoRate * (anosContrato - 1)))
-    const EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL =
-      this.getVariableValue('EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL') || 15.0;
+    const EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL = this.getVar('EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL', 15.0);
     const escalonamentoFactor = 1 + (EQUALIZA_ESCALONAMENTO_ANUAL_PERCENTUAL / 100) * (anosContrato - 1);
 
-    // Base unit rates from BANCO DE DADOS or fallback defaults
-    const precoBaseAP = this.getVariableValue('TIER_1_AP_PRICE') || 345.124551; // N7 in Excel
-    const precoBaseConf = this.getVariableValue('VALOR_ALQ_CONFERENCIA') || 71.666667; // N4 in Excel
-    const precoBaseFolha = this.getVariableValue('VALOR_ALQ_FOLHA') || 18; // N10 in Excel
-    const precoBaseCompactacao = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111; // B8 in Excel
+    // Base unit rates from BANCO DE DADOS (AP_ATE_50_ALQ takes priority so edits to AP update Equaliza too)
+    const precoBaseAP = this.costVariables.has('AP_ATE_50_ALQ')
+      ? this.costVariables.get('AP_ATE_50_ALQ')!
+      : this.getVar('TIER_1_AP_PRICE', 345.124551);
+    const precoBaseConf = this.getVar('VALOR_ALQ_CONFERENCIA', 71.666667); // N4 in Excel
+    const precoBaseFolha = this.getVar('VALOR_ALQ_FOLHA', 18); // N10 in Excel
+    const precoBaseCompactacao = this.getVar('VALOR_PONTO_CONFERE_COMPACTACAO', 361.111111); // B8 in Excel
 
-    const EQUALIZA_FATOR_CONFERENCIA = this.getVariableValue('EQUALIZA_FATOR_CONFERENCIA') || 8.0;
-    const EQUALIZA_FATOR_FOLHA = this.getVariableValue('EQUALIZA_FATOR_FOLHA') || 0.10;
-    const EQUALIZA_CUSTO_FUNGO_NEMA = this.getVariableValue('EQUALIZA_CUSTO_FUNGO_NEMA') || 30.00;
+    const EQUALIZA_FATOR_CONFERENCIA = this.getVar('EQUALIZA_FATOR_CONFERENCIA', 8.0);
+    const EQUALIZA_FATOR_FOLHA = this.getVar('EQUALIZA_FATOR_FOLHA', 0.10);
+    const EQUALIZA_CUSTO_FUNGO_NEMA = this.getVar('EQUALIZA_CUSTO_FUNGO_NEMA', 30.00);
 
     // H23 in BANCO DE DADOS:
     // =$N$7*EQUALIZA!H33 + 'BANCO DE DADOS'!$N$7*EQUALIZA!H34*(1+(15%*(EQUALIZA!$K$32-1)))

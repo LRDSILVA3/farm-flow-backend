@@ -50,6 +50,12 @@ class Farm {
   @Column({ nullable: true })
   lot: string;
 
+  @Column({ nullable: true })
+  responsible_name: string;
+
+  @Column({ nullable: true })
+  responsible_cpf: string;
+
   @OneToMany(() => Plot, plot => plot.farm, { eager: true, cascade: true })
   plots: Plot[];
 

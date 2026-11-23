@@ -40,6 +40,10 @@ export class FoliarService {
     return value === undefined ? 0 : value;
   }
 
+  private getVar(code: string, fallback: number): number {
+    return this.costVariables.has(code) ? this.costVariables.get(code)! : fallback;
+  }
+
   public calculate(params: FoliarParams): FoliarCalculationResult {
     let {
       calculoPor,
@@ -51,26 +55,26 @@ export class FoliarService {
       numPontos,
     } = params;
 
-    if (!totalAlqueires || totalAlqueires === 0) {
+    if (!totalAlqueires || totalAlqueires <= 0) {
       totalAlqueires = alqueires;
     }
 
-    const VALOR_ALQ_FOLHA = this.getVariableValue('VALOR_ALQ_FOLHA') || 18;
-    const VALOR_PONTO_CONFERE_COMPACTACAO = this.getVariableValue('VALOR_PONTO_CONFERE_COMPACTACAO') || 361.111111;
-    const VALOR_ANALISE_FOLIAR = this.getVariableValue('VALOR_ANALISE_FOLIAR') || 90;
-    const VALOR_VIAGEM_CONFERENCIA_FOLHA = this.getVariableValue('VALOR_VIAGEM_CONFERENCIA_FOLHA') || 366.666667;
+    const VALOR_ALQ_FOLHA = this.getVar('VALOR_ALQ_FOLHA', 18);
+    const VALOR_ANALISE_FOLIAR = this.getVar('VALOR_ANALISE_FOLIAR', 90);
     // In Excel sheet 'INPUT FOLHA ', cell F2 uses POWER(1.03, DAYS(E2,H2)/30), i.e. 3.0% per month
-    const JUROS_FOLIAR_PERCENTUAL =
-      this.getVariableValue('JUROS_FOLIAR_PERCENTUAL') || 3.0;
-    const DATA_BASE_CALCULO_JURO = this.getVariableValue('DATA_BASE_CALCULO_JURO') || 20251231;
+    const JUROS_FOLIAR_PERCENTUAL = this.getVar('JUROS_FOLIAR_PERCENTUAL', 3.0);
+    const DATA_BASE_CALCULO_JURO = this.getVar('DATA_BASE_CALCULO_JURO', 20251231);
 
-    // KM cost: dynamically computed from diesel if available
-    const valorDiesel = this.getVariableValue('VALOR_OLEO_DIESEL');
-    let valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO');
-    if (valorDiesel > 0) {
-      valorKm = (valorDiesel / 7) * 4;
-    } else if (valorKm === 0) {
-      valorKm = this.getVariableValue('VALOR_KM_CONFERENCIA_FOLHA') || 4.785714;
+    // KM cost: reads VALOR_KM_CONFERENCIA_FOLHA directly if configured; falls back to diesel formula only if missing
+    let valorKm: number;
+    if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA')!;
+    } else if (this.costVariables.has('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')) {
+      valorKm = this.costVariables.get('VALOR_KM_CONFERENCIA_FOLHA_CALCULADO')!;
+    } else if (this.getVariableValue('VALOR_OLEO_DIESEL') > 0) {
+      valorKm = (this.getVariableValue('VALOR_OLEO_DIESEL') / 7) * 4;
+    } else {
+      valorKm = 4.785714;
     }
 
     // Parse dates
@@ -94,7 +98,7 @@ export class FoliarService {
 
     // LucasRafael.xlsm 'INPUT FOLHA '!E6 unified formula (replaces old A/P split):
     // =IF(C6=0, 0, (B6*'BANCO DE DADOS'!$B$9 + C6*'BANCO DE DADOS'!$B$11) * IF($E$3="S", 1, 0.93) * $F$2 + ('BANCO DE DADOS'!$B$12 * $E$4 * 2 / $B$26 * B6))
-    const FATOR_SEM_NOTA_FISCAL = this.getVariableValue('FATOR_SEM_NOTA_FISCAL') || 0.93;
+    const FATOR_SEM_NOTA_FISCAL = this.getVar('FATOR_SEM_NOTA_FISCAL', 0.93);
     const nfFactor = clienteDesejaNotaFiscal === 'S' ? 1 : FATOR_SEM_NOTA_FISCAL;
     const totalValue =
       numPontos > 0

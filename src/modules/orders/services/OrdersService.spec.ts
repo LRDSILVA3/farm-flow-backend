@@ -106,6 +106,98 @@ describe('Orders Service', () => {
     expect(mockOrdersRepo.save).toHaveBeenCalled();
   });
 
+  it('update should throw AppError if trying to add schedule to a pending order', async () => {
+    const existing = { id: 'order-1', status: 'Pendente', schedules: [] };
+    mockOrdersRepo.findOne.mockResolvedValue(existing);
+
+    await expect(
+      service.update('order-1', {
+        schedules: [{ id: 'sched-1', scheduledDate: '2026-11-25' }],
+      }),
+    ).rejects.toThrow('O pedido não pode ser agendado pois está aguardando aprovação');
+  });
+
+  it('update should throw AppError if trying to add execution to a pending order', async () => {
+    const existing = { id: 'order-1', status: 'Pendente', executions: [], executed_area: 0 };
+    mockOrdersRepo.findOne.mockResolvedValue(existing);
+
+    await expect(
+      service.update('order-1', {
+        executions: [{ id: 'exec-1', areaExecuted: 50 }],
+        executed_area: 50,
+      }),
+    ).rejects.toThrow('O pedido não pode ser executado pois está aguardando aprovação');
+  });
+
+  it('update should allow schedule and execution when order is approved', async () => {
+    const existing = { id: 'order-1', status: 'Aprovado', schedules: [], executions: [], executed_area: 0 };
+    mockOrdersRepo.findOne.mockResolvedValue(existing);
+
+    const result = await service.update('order-1', {
+      schedules: [{ id: 'sched-1', scheduledDate: '2026-11-25' }],
+      executions: [{ id: 'exec-1', areaExecuted: 50 }],
+      executed_area: 50,
+    });
+
+    expect(result.schedules).toHaveLength(1);
+    expect(result.executed_area).toBe(50);
+    expect(mockOrdersRepo.save).toHaveBeenCalled();
+  });
+
+  it('update should allow recording payment on approved order even when area/value formatting differs ("100.00" vs 100)', async () => {
+    const existing = {
+      id: 'order-1',
+      status: 'Aprovado',
+      client_id: 'c1',
+      farm_id: 'f1',
+      service_name: 'Amostragem',
+      type: 'Serviço',
+      service_group: null,
+      area: '100.00',
+      value: '10000.00',
+      products_data: null,
+      payments: [],
+      paid_amount: 0,
+      payment: 'Aguardando',
+    };
+    mockOrdersRepo.findOne.mockResolvedValue(existing);
+
+    const result = await service.update('order-1', {
+      client_id: 'c1',
+      farm_id: 'f1',
+      service_name: 'Amostragem',
+      type: 'Serviço',
+      service_group: '',
+      area: 100,
+      value: 10000,
+      products_data: [],
+      payments: [{ id: 'pay-1', amount: 5000, method: 'PIX', date: '2026-11-22' }],
+      paid_amount: 5000,
+      payment: 'Parcial',
+    });
+
+    expect(result.paid_amount).toBe(5000);
+    expect(result.payment).toBe('Parcial');
+    expect(mockOrdersRepo.save).toHaveBeenCalled();
+  });
+
+  it('update should throw AppError if trying to edit contract fields of an approved order', async () => {
+    const existing = { id: 'order-1', status: 'Aprovado', client_id: 'c1', service_name: 'Amostragem', area: 100, value: 'R$ 10.000,00' };
+    mockOrdersRepo.findOne.mockResolvedValue(existing);
+
+    await expect(
+      service.update('order-1', {
+        service_name: 'Novo Serviço Alterado',
+      }),
+    ).rejects.toThrow('Depois de aprovado, o pedido não pode ser editado.');
+
+    await expect(
+      service.update('order-1', {
+        area: 120,
+      }),
+    ).rejects.toThrow('Depois de aprovado, o pedido não pode ser editado.');
+  });
+
   it('update should throw AppError if order does not exist', async () => {
     mockOrdersRepo.findOne.mockResolvedValue(null);
     await expect(

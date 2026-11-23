@@ -5,6 +5,7 @@ import { ensureActiveUser, ensurePermission } from '@shared/http/middlewares/ens
 import OrdersController from '../controllers/OrdersController';
 import ServiceExecution from '../typeorm/entities/ServiceExecution';
 import Order from '../typeorm/entities/Order';
+import AppError from '@shared/errors/AppError';
 import { recordAudit, safeFindSnapshot } from '@modules/audit/services/AuditLogService';
 import { buildOrderEntityLabel } from '../utils/orderAudit';
 
@@ -32,6 +33,26 @@ ordersRouter.get('/:id/executions', async (req: Request, res: Response) => {
 });
 
 ordersRouter.post('/:id/executions', ensurePermission('orders', 'schedule'), async (req: Request, res: Response) => {
+  const orderRepo = getRepository(Order);
+  const parentOrder = await orderRepo.findOne(req.params.id);
+  if (!parentOrder) {
+    throw new AppError('Pedido não encontrado.', 404);
+  }
+
+  const isPending =
+    parentOrder.status === 'Pendente' ||
+    parentOrder.status === 'pending' ||
+    parentOrder.status === 'Aguardando' ||
+    parentOrder.status === 'Aguardando Aprovação' ||
+    parentOrder.status === 'Cancelado';
+
+  if (isPending) {
+    throw new AppError(
+      'O pedido não pode ser executado pois está aguardando aprovação. Aprove o pedido antes de registrar execuções.',
+      400,
+    );
+  }
+
   const repo = getRepository(ServiceExecution);
   const execution = repo.create({
     order_id: req.params.id,
@@ -48,7 +69,7 @@ ordersRouter.post('/:id/executions', ensurePermission('orders', 'schedule'), asy
     notes: req.body.notes || null,
   });
   await repo.save(execution);
-  const parentOrder = await safeFindSnapshot(Order, req.params.id);
+  const orderSnapshot = await safeFindSnapshot(Order, req.params.id);
   const productInfo = execution.product_name ? ` - ${execution.quantity ? execution.quantity + ' ' + (execution.unit || '') + ' de ' : ''}${execution.product_name}` : '';
   const plotInfo = execution.plot_name ? ` (${execution.plot_name})` : '';
   await recordAudit({
@@ -56,7 +77,7 @@ ordersRouter.post('/:id/executions', ensurePermission('orders', 'schedule'), asy
     module: 'orders',
     action: 'EXECUTION',
     entityId: req.params.id,
-    entityLabel: buildOrderEntityLabel(parentOrder),
+    entityLabel: buildOrderEntityLabel(orderSnapshot || parentOrder),
     summary: `Execução de ${execution.area_ha} ha registrada (${execution.operator_name}${productInfo}${plotInfo})`,
     afterData: execution,
   });
