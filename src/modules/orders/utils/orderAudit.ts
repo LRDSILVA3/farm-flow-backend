@@ -19,6 +19,8 @@ export const ORDER_AUDIT_FIELDS: AuditFieldMap = {
   client_id: 'Cliente (ID)',
   farm_id: 'Fazenda (ID)',
   service_group: 'Grupo de Serviço',
+  responsible_name: 'Responsável',
+  responsible_id: 'Responsável (ID)',
 };
 
 const detectArrayChanges = (
@@ -90,6 +92,9 @@ const inferOrderAction = (
   ) {
     return { logAction: 'Pagamento', auditAction: 'PAYMENT' };
   }
+  if (fields.has('responsible_name') || fields.has('responsible_id')) {
+    return { logAction: 'Atribuição', auditAction: 'TRANSFER_RESPONSIBILITY' };
+  }
 
   return { logAction: 'Edição', auditAction: 'UPDATE' };
 };
@@ -99,7 +104,7 @@ export const prepareOrderUpdateWithLogs = (
   rawBody: Record<string, any>,
   actor: AuditActor,
 ) => {
-  const { financial_notes, ...cleanUpdateBody } = rawBody || {};
+  const { financial_notes, user_id, creator_name, ...cleanUpdateBody } = rawBody || {};
   const mergedForDiff = existingOrder
     ? { ...existingOrder, ...cleanUpdateBody }
     : cleanUpdateBody;

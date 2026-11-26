@@ -19,6 +19,15 @@ class Order {
   user_id: string;
 
   @Column({ nullable: true })
+  creator_name: string;
+
+  @Column({ nullable: true })
+  responsible_id: string;
+
+  @Column({ nullable: true })
+  responsible_name: string;
+
+  @Column({ nullable: true })
   client_id: string;
 
   @ManyToOne(() => Client, { eager: true, nullable: true })

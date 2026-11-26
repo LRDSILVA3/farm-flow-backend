@@ -31,12 +31,22 @@ export default class OrdersController {
       ? numericVal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
       : 'R$ 0,00';
 
+    const creatorName = body.creator_name || actor.name || 'Criador do Pedido';
+    const creatorId = body.user_id || actor.id || null;
+    const responsibleName = body.responsible_name || creatorName;
+    const responsibleId = body.responsible_id || creatorId;
+
+    body.user_id = creatorId;
+    body.creator_name = creatorName;
+    body.responsible_id = responsibleId;
+    body.responsible_name = responsibleName;
+
     if (existingLogs.length === 0) {
       body.logs = [
         {
           id: randomUUID(),
           action: 'Criação',
-          details: `Pedido criado no valor de ${formattedVal} para o serviço ${serviceLabel}`,
+          details: `Pedido criado no valor de ${formattedVal} para o serviço ${serviceLabel} (Responsável: ${responsibleName})`,
           userName: actor.name || 'Sistema',
           userId: actor.id,
           timestamp: new Date().toISOString(),
