@@ -94,8 +94,8 @@ export class ConferenciaService {
       totalAlqueires,
     } = params;
 
-    // Defensive programming: If totalAlqueires is 0, use plot alqueires
-    if (!totalAlqueires || totalAlqueires === 0) {
+    // Defensive programming: totalAlqueires must be at least the plot alqueires (B30 >= B10 in Excel)
+    if (!totalAlqueires || totalAlqueires < alqueires) {
       totalAlqueires = alqueires;
     }
 

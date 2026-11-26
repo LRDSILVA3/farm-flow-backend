@@ -107,6 +107,23 @@ describe('ConferenciaService', () => {
     expect(result.details.breakdown.analiseMacroTotal).toBeCloseTo(1371.00, 2);
     expect(result.details.breakdown.analise20_40Total).toBeCloseTo(221.70, 2);
     expect(result.details.breakdown.analiseBIOASTotal).toBeCloseTo(615.60, 2);
+
+    // Test increasing 1 alqueire to 21 alq (matching spreadsheet cell F10: R$ 408,77/alq)
+    const result21 = service2026.calculate({
+      clienteDesejaNotaFiscal: 'N',
+      distanciaFazendaKm: 10,
+      vencimentoServico: '01/01/2027',
+      desejaAnaliseFisica: 'N',
+      percentualAnalises20_40cm: 20,
+      percentualAnalisesBIOAS: 20,
+      alqueires: 21.0,
+      numAnalises: 15,
+      totalAlqueires: 20.0,
+    });
+
+    expect(result21.totalValue).toBeCloseTo(8584.20, 2);
+    expect(result21.totalValuePerAlq).toBeCloseTo(408.77, 2);
+    expect(result21.totalValuePerPoint).toBeCloseTo(572.28, 2);
   });
 
   it('should support manual commercial discounts and fixed closed value', () => {
