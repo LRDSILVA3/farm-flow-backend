@@ -51,6 +51,9 @@ export interface ATVCalculationResult {
   precoPorAlqueire: number;
   precoPorTonelada: number;
   precoPorCarga: number;
+  indicadorFreteKmTon: number;
+  indicadorTotalKmTon: number;
+  indicadorCarregamentoTon: number;
   details: {
     jurosFactor: number;
     itens: ATVItemResult[];
@@ -268,6 +271,19 @@ export class ATVService {
     const precoPorTonelada = totalToneladas > 0 ? Math.round((totalValue / totalToneladas) * 100) / 100 : 0;
     const precoPorCarga = totalCargas > 0 ? Math.round((totalValue / totalCargas) * 100) / 100 : 0;
 
+    // Indicadores exatos da planilha (Q26, Q27, Q28 de INPUT ATV)
+    const toneladasComFrete = itens.filter(it => it.cobraFrete).reduce((sum, it) => sum + (parseFloat(it.toneladas as any) || 0), 0);
+    const indicadorFreteKmTon = toneladasComFrete > 0 && distanciaIdaKm > 0
+      ? Math.round((subtotalFrete / (toneladasComFrete * distanciaIdaKm)) * 100) / 100
+      : 0;
+    const baseServicoTotal = subtotalATV + subtotalFrete;
+    const indicadorTotalKmTon = toneladasComFrete > 0 && distanciaIdaKm > 0
+      ? Math.round((baseServicoTotal / (toneladasComFrete * distanciaIdaKm)) * 100) / 100
+      : 0;
+    const indicadorCarregamentoTon = totalToneladas > 0
+      ? Math.round((custoCarregamento / totalToneladas) * 100) / 100
+      : 0;
+
     return {
       totalValue,
       subtotalATV,
@@ -283,6 +299,9 @@ export class ATVService {
       precoPorAlqueire,
       precoPorTonelada,
       precoPorCarga,
+      indicadorFreteKmTon,
+      indicadorTotalKmTon,
+      indicadorCarregamentoTon,
       details: {
         jurosFactor,
         itens: itemResults,
