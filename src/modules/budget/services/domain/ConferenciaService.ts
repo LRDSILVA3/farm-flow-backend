@@ -10,6 +10,9 @@ export interface ConferenciaParams {
   alqueires: number;
   numAnalises: number;
   totalAlqueires: number;
+  descontoManual?: number;
+  descontoPercentualManual?: number;
+  valorFechadoManual?: number;
 }
 
 export interface CostVariable {
@@ -49,6 +52,12 @@ export interface ConferenciaCalculationResult {
   totalValue: number;
   totalValuePerAlq: number;
   totalValuePerPoint: number;
+  valorTotalSugerido: number;
+  sugeridoPerAlq: number;
+  sugeridoPerPoint: number;
+  desconto: number;
+  descontoPercentual: number;
+  descontoPerAlq: number;
   details: ConferenciaDetails;
 }
 
@@ -186,18 +195,40 @@ export class ConferenciaService {
     // (selectedCostMethod + travelCost) * F5 + (numAnalises * F6) + F7 + F8
     const custoTalhaoCalculated = servicoComJuros + analiseMacroTotal + analise20_40Total + analiseBIOASTotal;
 
-    // Excel F31: Linha adicional de 20-40cm somada no total E31
-    // IF(E7>0, IF(C30*E7<=1, 1, ROUND(E7*C30, 0)), 0) * ('INPUT DADOS'!C23 + 'BANCO DE DADOS'!B10)
+    // Linha adicional de 20-40cm somada no total
     const custoAnalises20_40cm =
       numAnalises20_40cm * (ANALISE_20_40_CM_VALOR_ANALISE + VALOR_ALQ_CONFERENCIA);
 
-    // Total work value: Excel E31 = SUM(E10:E29) + F31
-    const totalValue = custoTalhaoCalculated + custoAnalises20_40cm;
+    // Sugerido do trabalho baseado na planilha INPUT CONFERENCIA (E10)
+    const valorTotalSugerido = custoTalhaoCalculated;
+
+    // Desconto e Valor Fechado (igual ao pedido de AP)
+    let totalValue = valorTotalSugerido;
+    let desconto = 0;
+    let descontoPercentual = 0;
+
+    if (params.valorFechadoManual !== undefined && params.valorFechadoManual !== null && params.valorFechadoManual > 0) {
+      totalValue = params.valorFechadoManual;
+      desconto = Math.max(0, valorTotalSugerido - totalValue);
+      descontoPercentual = valorTotalSugerido > 0 ? (desconto / valorTotalSugerido) * 100 : 0;
+    } else if (params.descontoPercentualManual !== undefined && params.descontoPercentualManual !== null && params.descontoPercentualManual > 0) {
+      descontoPercentual = params.descontoPercentualManual;
+      desconto = (valorTotalSugerido * descontoPercentual) / 100;
+      totalValue = Math.max(0, valorTotalSugerido - desconto);
+    } else if (params.descontoManual !== undefined && params.descontoManual !== null && params.descontoManual > 0) {
+      desconto = params.descontoManual;
+      totalValue = Math.max(0, valorTotalSugerido - desconto);
+      descontoPercentual = valorTotalSugerido > 0 ? (desconto / valorTotalSugerido) * 100 : 0;
+    }
+
     const totalValuePerAlq = alqueires > 0 ? totalValue / alqueires : 0;
     const totalValuePerPoint = numAnalises > 0 ? totalValue / numAnalises : 0;
+    const sugeridoPerAlq = alqueires > 0 ? valorTotalSugerido / alqueires : 0;
+    const sugeridoPerPoint = numAnalises > 0 ? valorTotalSugerido / numAnalises : 0;
+    const descontoPerAlq = alqueires > 0 ? desconto / alqueires : 0;
 
     // Breakdown matching PEDIDO CONFERENCIA rows 40-44:
-    // Row 40: SERVIÇO DE COLETA DE ANÁLISE = E31 - J42 - J43 - J44
+    // Row 40: SERVIÇO DE COLETA DE ANÁLISE = Total - J42 - J43 - J44
     const coletaServicoTotal = totalValue - analiseMacroTotal - analise20_40Total - analiseBIOASTotal;
     const coletaServicoPerAlq = alqueires > 0 ? coletaServicoTotal / alqueires : 0;
 
@@ -205,6 +236,12 @@ export class ConferenciaService {
       totalValue,
       totalValuePerAlq,
       totalValuePerPoint,
+      valorTotalSugerido,
+      sugeridoPerAlq,
+      sugeridoPerPoint,
+      desconto,
+      descontoPercentual,
+      descontoPerAlq,
       details: {
         jurosFactor,
         custoAnaliseFisica,
