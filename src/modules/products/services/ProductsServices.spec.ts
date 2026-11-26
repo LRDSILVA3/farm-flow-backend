@@ -19,6 +19,9 @@ vi.mock('typeorm', () => ({
   Column: () => () => {},
   CreateDateColumn: () => () => {},
   UpdateDateColumn: () => () => {},
+  OneToMany: () => () => {},
+  ManyToOne: () => () => {},
+  JoinColumn: () => () => {},
 }));
 
 import ListProductService from './ListProductService';
@@ -124,14 +127,25 @@ describe('Products Services', () => {
   });
 
   it('DeleteProductService should remove product', async () => {
-    const existing = { id: 'prod-1', name: 'Item' };
+    const existing = { id: 'prod-1', name: 'Item Comum' };
     mockRepo.findOne.mockResolvedValue(existing);
+    mockRepo.count = vi.fn().mockResolvedValue(0);
     mockRepo.remove.mockResolvedValue(existing);
 
     const service = new DeleteProductService();
     await service.execute({ id: 'prod-1' });
 
     expect(mockRepo.remove).toHaveBeenCalledWith(existing);
+  });
+
+  it('DeleteProductService should throw AppError if product is protected service product', async () => {
+    const existing = { id: 'prod-calc', name: 'Calcário Calcítico' };
+    mockRepo.findOne.mockResolvedValue(existing);
+
+    const service = new DeleteProductService();
+    await expect(service.execute({ id: 'prod-calc' })).rejects.toThrow(
+      'insumo essencial utilizado em serviços',
+    );
   });
 
   it('DeleteProductService should throw AppError if not found', async () => {

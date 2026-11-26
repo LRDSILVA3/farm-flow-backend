@@ -17,10 +17,12 @@ import sampleLabelBatchesRouter from '@modules/analyses/routes/sampleLabelBatche
 import dashboardRouter from '@modules/dashboard/routes/dashboard.routes';
 import financialRouter from '@modules/financial/routes/financial.routes';
 import auditRouter from '@modules/audit/routes/audit.routes';
+import positionsRouter from '@modules/user-position/routes/userPositions.routes';
 
 const routes = Router();
 
 routes.use('/users', usersRouter);
+routes.use('/positions', positionsRouter);
 routes.use('/sessions', sessionsRouter);
 routes.use('/clients', clientsRouter);
 routes.use('/products', productsRouter);

@@ -1,13 +1,30 @@
 export const ALL_PERMISSION_KEYS = [
   'dashboard',
+  'dashboard:view',
   'customers',
+  'customers:view',
+  'customers:edit',
   'farms',
+  'farms:view',
+  'farms:edit',
   'orders',
+  'orders:view',
+  'orders:edit',
   'schedule',
+  'schedule:view',
+  'schedule:edit',
   'analysis',
+  'analysis:view',
+  'analysis:edit',
   'financial',
+  'financial:view',
+  'financial:edit',
   'reports',
+  'reports:view',
+  'reports:edit',
   'settings',
+  'settings:view',
+  'settings:edit',
 ] as const;
 
 export type PermissionKey = (typeof ALL_PERMISSION_KEYS)[number];
@@ -31,10 +48,45 @@ export const ROLE_TO_LABEL: Record<string, string> = {
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, PermissionKey[]> = {
   Administrador: [...ALL_PERMISSION_KEYS],
-  Gerente: ['dashboard', 'customers', 'farms', 'orders', 'schedule', 'analysis', 'financial', 'reports'],
-  'Operador de Campo': ['dashboard', 'farms', 'orders', 'schedule'],
-  Financeiro: ['dashboard', 'customers', 'orders', 'financial', 'reports'],
-  Analista: ['dashboard', 'farms', 'analysis', 'reports'],
+  Gerente: [
+    'dashboard',
+    'customers',
+    'farms',
+    'orders',
+    'schedule',
+    'analysis',
+    'financial',
+    'reports',
+    'settings',
+  ],
+  'Engenheiro Agrônomo': [
+    'dashboard',
+    'customers',
+    'farms',
+    'orders',
+    'schedule',
+    'analysis',
+    'reports',
+  ],
+  'Operador de Campo': [
+    'dashboard',
+    'farms',
+    'orders',
+    'schedule',
+  ],
+  Financeiro: [
+    'dashboard',
+    'customers',
+    'orders',
+    'financial',
+    'reports',
+  ],
+  Analista: [
+    'dashboard',
+    'farms',
+    'analysis',
+    'reports',
+  ],
 };
 
 export const normalizeRoleLabel = (role?: string | null): string => {

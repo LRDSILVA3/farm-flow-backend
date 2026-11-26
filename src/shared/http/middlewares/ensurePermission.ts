@@ -40,11 +40,30 @@ export const ensurePermission = (...requiredPermissions: string[]) => {
       permissions: effectivePermissions,
     };
 
-    if (
-      requiredPermissions.length > 0 &&
-      !requiredPermissions.some(perm => effectivePermissions.includes(perm as any))
-    ) {
-      throw new AppError('Você não tem permissão para acessar este recurso.', 403);
+    if (requiredPermissions.length > 0) {
+      const isAuthorized = requiredPermissions.some(req => {
+        if (effectivePermissions.includes(req as any)) return true;
+        if (req.endsWith(':view')) {
+          const baseMod = req.replace(':view', '');
+          return (
+            effectivePermissions.includes(baseMod as any) ||
+            effectivePermissions.includes(`${baseMod}:edit` as any)
+          );
+        }
+        if (req.endsWith(':edit')) {
+          const baseMod = req.replace(':edit', '');
+          return effectivePermissions.includes(baseMod as any);
+        }
+        // req é a chave base do módulo (ex: 'orders')
+        return (
+          effectivePermissions.includes(`${req}:view` as any) ||
+          effectivePermissions.includes(`${req}:edit` as any)
+        );
+      });
+
+      if (!isAuthorized) {
+        throw new AppError('Você não tem permissão para acessar este recurso.', 403);
+      }
     }
 
     return next();

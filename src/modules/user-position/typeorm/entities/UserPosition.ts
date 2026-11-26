@@ -17,6 +17,9 @@ class UserPosition {
     @Column({ type: 'boolean', default: true, nullable: false })
     status: boolean;
 
+    @Column({ type: 'jsonb', nullable: true })
+    permissions?: string[];
+
     @CreateDateColumn({ type: 'timestamp with time zone' }) // Usamos timestamp with time zone
     created_at: Date;
 
