@@ -13,6 +13,7 @@
     "typeorm:migrate": "ts-node --transpile-only -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run",
     "typeorm:revert": "ts-node --transpile-only -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert",
     "seed": "ts-node --transpile-only -r tsconfig-paths/register ./src/shared/typeorm/seeds/index.ts",
+    "db:clean-data": "node scripts/clean_operational_data.js",
     "test": "vitest --run",
     "test:coverage": "vitest run --coverage"
   },
